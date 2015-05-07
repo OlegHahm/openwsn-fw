@@ -40,14 +40,20 @@ int mote_main(void) {
    board_init();
    scheduler_init();
    openstack_init();
-   if (idmanager_getMyID(ADDR_64B)->addr_64b[7]==0x62) {
+   if (idmanager_getMyID(ADDR_64B)->addr_64b[7]==0x01) {
        idmanager_setIsDAGroot(TRUE);
 
        open_addr_t     temp_neighbor;
        memset(&temp_neighbor,0,sizeof(temp_neighbor));
-       temp_neighbor.type             = ADDR_16B;
-       temp_neighbor.addr_16b[0]      = 0x99;
-       temp_neighbor.addr_16b[1]      = 0x83;
+       temp_neighbor.type             = ADDR_64B;
+       temp_neighbor.addr_64b[0]      = 0x14;
+       temp_neighbor.addr_64b[1]      = 0x15;
+       temp_neighbor.addr_64b[2]      = 0x92;
+       temp_neighbor.addr_64b[3]      = 0xcc;
+       temp_neighbor.addr_64b[4]      = 0x00;
+       temp_neighbor.addr_64b[5]      = 0x00;
+       temp_neighbor.addr_64b[6]      = 0x00;
+       temp_neighbor.addr_64b[7]      = 0x03;
 
        schedule_addActiveSlot(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS + 1,
                CELLTYPE_TX,
@@ -62,12 +68,18 @@ int mote_main(void) {
                &temp_neighbor
               );
    }
-   else if ((idmanager_getMyID(ADDR_64B)->addr_64b[6]==0x99) && (idmanager_getMyID(ADDR_64B)->addr_64b[7]==0x83)) {
+   else if ((idmanager_getMyID(ADDR_64B)->addr_64b[6]==0x00) && (idmanager_getMyID(ADDR_64B)->addr_64b[7]==0x03)) {
        open_addr_t     temp_neighbor;
        memset(&temp_neighbor,0,sizeof(temp_neighbor));
-       temp_neighbor.type             = ADDR_16B;
-       temp_neighbor.addr_16b[0]      = 0x21;
-       temp_neighbor.addr_16b[1]      = 0x62;
+       temp_neighbor.type             = ADDR_64B;
+       temp_neighbor.addr_64b[0]      = 0x14;
+       temp_neighbor.addr_64b[1]      = 0x15;
+       temp_neighbor.addr_64b[2]      = 0x92;
+       temp_neighbor.addr_64b[3]      = 0xcc;
+       temp_neighbor.addr_64b[4]      = 0x00;
+       temp_neighbor.addr_64b[5]      = 0x00;
+       temp_neighbor.addr_64b[6]      = 0x00;
+       temp_neighbor.addr_64b[7]      = 0x01;
 
        schedule_addActiveSlot(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS + 1,
                CELLTYPE_RX,
@@ -93,7 +105,7 @@ void macpong_initSend(opentimer_id_t id) {
     }
     if (ieee154e_isSynch()==TRUE && neighbors_getNumNeighbors()==1) {
         // send packet
-        //poipoimacpong_send(0);   
+        macpong_send(0);
         // cancel timer
         opentimers_stop(macpong_vars.timerId);
     }
@@ -116,7 +128,7 @@ void macpong_send(uint8_t payloadCtr) {
     pkt->creator                   = COMPONENT_IPHC;
     pkt->owner                     = COMPONENT_IPHC;
 
-    neighbors_getNeighbor(&pkt->l2_nextORpreviousHop,ADDR_16B,0);
+    neighbors_getNeighbor(&pkt->l2_nextORpreviousHop,ADDR_64B,0);
     packetfunctions_reserveHeaderSize(pkt,LEN_PAYLOAD);
     ((uint8_t*)pkt->payload)[0]    = payloadCtr;
     for (i=1;i<LEN_PAYLOAD;i++){
