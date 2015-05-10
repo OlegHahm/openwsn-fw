@@ -178,15 +178,15 @@ void macpong_send(uint8_t payloadCtr, open_addr_t *dst) {
     pkt = openqueue_getFreePacketBuffer(COMPONENT_UECHO);
     if (pkt==NULL) {
         openserial_printError(
-                COMPONENT_IPHC,
+                COMPONENT_ICN,
                 ERR_NO_FREE_PACKET_BUFFER,
                 (errorparameter_t)0,
                 (errorparameter_t)0
                 );
         return;
     }
-    pkt->creator                   = COMPONENT_IPHC;
-    pkt->owner                     = COMPONENT_IPHC;
+    pkt->creator                   = COMPONENT_ICN;
+    pkt->owner                     = COMPONENT_ICN;
     pkt->l2_nextORpreviousHop.type = ADDR_64B;
 
     memcpy(&pkt->l2_nextORpreviousHop, dst, sizeof(open_addr_t));
@@ -212,12 +212,12 @@ void iphc_init(void) {
 }
 
 void iphc_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
-    msg->owner = COMPONENT_IPHC;
+    msg->owner = COMPONENT_ICN;
     openqueue_freePacketBuffer(msg);
 }
 
 void iphc_receive(OpenQueueEntry_t* msg) {
-    msg->owner = COMPONENT_IPHC;
+    msg->owner = COMPONENT_ICN;
     if (idmanager_getIsDAGroot()==TRUE) {
         macpong_send(++msg->payload[0], &(msg->l2_nextORpreviousHop));
     }
