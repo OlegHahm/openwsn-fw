@@ -175,7 +175,7 @@ void macpong_send(uint8_t payloadCtr, open_addr_t *dst) {
     OpenQueueEntry_t* pkt;
     uint8_t i;
 
-    pkt = openqueue_getFreePacketBuffer(COMPONENT_UECHO);
+    pkt = openqueue_getFreePacketBuffer(COMPONENT_ICN);
     if (pkt==NULL) {
         openserial_printError(
                 COMPONENT_ICN,
