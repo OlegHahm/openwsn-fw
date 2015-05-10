@@ -153,10 +153,8 @@ void macpong_initSend(opentimer_id_t id) {
        temp_neighbor.type             = ADDR_64B;
 
        unsigned myNumber = _getNodeNumber();
-       openserial_printError(COMPONENT_ICN,
-               ERR_DEBUG1,
-               (errorparameter_t) myNumber,
-               (errorparameter_t) id);
+       openserial_printError(COMPONENT_ICN, ERR_DEBUG1,
+               (errorparameter_t) myNumber, (errorparameter_t) id);
 
        if (myNumber == 0) {
            memcpy(&(temp_neighbor.addr_64b[4]), rootId, 4);
@@ -190,6 +188,9 @@ void macpong_send(uint8_t payloadCtr, open_addr_t *dst) {
     pkt->l2_nextORpreviousHop.type = ADDR_64B;
 
     memcpy(&pkt->l2_nextORpreviousHop, dst, sizeof(open_addr_t));
+
+    openserial_printError(COMPONENT_ICN, ERR_DEBUG1,
+            (errorparameter_t) dst->addr_64b[7], (errorparameter_t) 44);
 
     packetfunctions_reserveHeaderSize(pkt,LEN_PAYLOAD);
     ((uint8_t*)pkt->payload)[0]    = payloadCtr;
