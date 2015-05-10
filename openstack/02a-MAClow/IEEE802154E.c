@@ -1037,7 +1037,7 @@ port_INLINE void activity_ti5(PORT_RADIOTIMER_WIDTH capturedTime) {
       // indicate succesful Tx to schedule to keep statistics
       schedule_indicateTx(&ieee154e_vars.asn,TRUE);
       // indicate to upper later the packet was sent successfully
-          openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+          openserial_printError(COMPONENT_SIXTOP,ERR_DEBUG2,
                   (errorparameter_t)11,
                   (errorparameter_t)11);
       notif_sendDone(ieee154e_vars.dataToSend,E_SUCCESS);
@@ -1100,7 +1100,7 @@ port_INLINE void activity_tie5() {
    
    if (ieee154e_vars.dataToSend->l2_retriesLeft==0) {
       // indicate tx fail if no more retries left
-          openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+          openserial_printError(COMPONENT_SIXTOP,ERR_DEBUG2,
                   (errorparameter_t)12,
                   (errorparameter_t)12);
       notif_sendDone(ieee154e_vars.dataToSend,E_FAIL);
@@ -1247,7 +1247,7 @@ port_INLINE void activity_ti9(PORT_RADIOTIMER_WIDTH capturedTime) {
       schedule_indicateTx(&ieee154e_vars.asn,TRUE);
       
       // inform upper layer
-          openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+          openserial_printError(COMPONENT_SIXTOP,ERR_DEBUG2,
                   (errorparameter_t)13,
                   (errorparameter_t)13);
       notif_sendDone(ieee154e_vars.dataToSend,E_SUCCESS);
@@ -2070,7 +2070,7 @@ void endSlot() {
       
       if (ieee154e_vars.dataToSend->l2_retriesLeft==0) {
          // indicate tx fail if no more retries left
-          openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+          openserial_printError(COMPONENT_SIXTOP,ERR_DEBUG2,
                   (errorparameter_t)10,
                   (errorparameter_t)10);
          notif_sendDone(ieee154e_vars.dataToSend,E_FAIL);

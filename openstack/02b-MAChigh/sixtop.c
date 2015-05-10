@@ -785,12 +785,12 @@ port_INLINE void sixtop_sendEB() {
    
    len = 0;
 
-   openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+   openserial_printError(COMPONENT_SIXTOP,ERR_DEBUG2,
                             (errorparameter_t)0,
                             (errorparameter_t)0);
    
    if ((ieee154e_isSynch()==FALSE) || (neighbors_getMyDAGrank()==DEFAULTDAGRANK)){
-       openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+       openserial_printError(COMPONENT_SIXTOP,ERR_DEBUG2,
                             (errorparameter_t)1,
                             (errorparameter_t)1);
       // I'm not sync'ed or I did not acquire a DAGrank
@@ -806,7 +806,7 @@ port_INLINE void sixtop_sendEB() {
    }
    
    if (sixtop_vars.busySendingEB==TRUE) {
-       openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+       openserial_printError(COMPONENT_SIXTOP,ERR_DEBUG2,
                             (errorparameter_t)2,
                             (errorparameter_t)2);
       // don't continue if I'm still sending a previous EB
@@ -814,7 +814,7 @@ port_INLINE void sixtop_sendEB() {
    }
    
    // if I get here, I will send an EB
-       openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+       openserial_printError(COMPONENT_SIXTOP,ERR_DEBUG2,
                             (errorparameter_t)3,
                             (errorparameter_t)3);
    
