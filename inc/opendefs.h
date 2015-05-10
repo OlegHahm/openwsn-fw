@@ -232,10 +232,12 @@ enum {
    ERR_INVALIDPACKETFROMRADIO          = 0x37, // invalid packet frome radio, length {1} (code location {0})
    ERR_BUSY_RECEIVING                  = 0x38, // busy receiving when stop of serial activity, buffer input length {1} (code location {0})
    ERR_WRONG_CRC_INPUT                 = 0x39, // wrong CRC in input Buffer (input length {0})
-   ERR_DEBUG1                          = 0x3a, // DEBUG1: {0} {1}
-   ERR_DEBUG2                          = 0x3b, // DEBUG3: {0} {1}
-   ERR_DEBUG3                          = 0x3c, // DEBUG3: {0} {1}
-   ERR_DEBUG4                          = 0x3d, // DEBUG4: {0} {1}
+   ERR_ICN_SEND                        = 0x3a, // ICN sending {0} to: {1}
+   ERR_ICN_RECV                        = 0x3b, // ICN receiving {0} from {1}
+   ERR_DEBUG1                          = 0x3c, // DEBUG1: {0} {1}
+   ERR_DEBUG2                          = 0x3d, // DEBUG3: {0} {1}
+   ERR_DEBUG3                          = 0x3e, // DEBUG3: {0} {1}
+   ERR_DEBUG4                          = 0x3f, // DEBUG4: {0} {1}
 };
 
 //=========================== typedef =========================================
