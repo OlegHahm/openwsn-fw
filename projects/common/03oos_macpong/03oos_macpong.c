@@ -158,7 +158,7 @@ void macpong_initSend(opentimer_id_t id) {
                (errorparameter_t) myNumber,
                (errorparameter_t) id);
 
-       if (myNumber == 1) {
+       if (myNumber == 0) {
            memcpy(&(temp_neighbor.addr_64b[4]), rootId, 4);
        }
        else {
