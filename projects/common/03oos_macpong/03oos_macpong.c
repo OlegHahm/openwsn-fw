@@ -181,8 +181,8 @@ void macpong_send(uint8_t payloadCtr, open_addr_t *dst) {
 
     memcpy(&pkt->l2_nextORpreviousHop, dst, sizeof(open_addr_t));
 
-    openserial_printError(COMPONENT_ICN, ERR_DEBUG1,
-            (errorparameter_t) dst->addr_64b[7], (errorparameter_t) 44);
+    openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
+                          1, (errorparameter_t) dst->addr_64b[7]);
 
     packetfunctions_reserveHeaderSize(pkt,LEN_PAYLOAD);
     ((uint8_t*)pkt->payload)[0]    = payloadCtr;
@@ -206,12 +206,18 @@ void iphc_init(void) {
 
 void iphc_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
     msg->owner = COMPONENT_ICN;
+    openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
+                          2, (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
     openqueue_freePacketBuffer(msg);
 }
 
 void iphc_receive(OpenQueueEntry_t* msg) {
     msg->owner = COMPONENT_ICN;
+    openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV,
+                          1, (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
     if (idmanager_getIsDAGroot()==TRUE) {
+        openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
+                44, (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
         macpong_send(++msg->payload[0], &(msg->l2_nextORpreviousHop));
     }
     openqueue_freePacketBuffer(msg);
