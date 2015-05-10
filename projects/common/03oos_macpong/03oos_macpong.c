@@ -86,7 +86,7 @@ int mote_main(void) {
    }
    else {
        extern neighbors_vars_t neighbors_vars;
-       neighbors_vars.myDAGrank = 1;
+       neighbors_vars.myDAGrank = 44;
        for (int i = 0; i < NUMBER_OF_NODES; i++) {
            if ((myId->addr_64b[4] == node_ids[i][0]) && (myId->addr_64b[5] == node_ids[i][1]) &&
                    (myId->addr_64b[6] == node_ids[i][2]) && (myId->addr_64b[7] == node_ids[i][3])) {
