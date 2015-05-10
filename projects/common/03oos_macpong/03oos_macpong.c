@@ -115,10 +115,8 @@ static inline unsigned _getNodeNumber(void) {
 }
 
 void macpong_setPrefix(open_addr_t *addr) {
-    open_addr_t *myID;
     memset(addr, 0, sizeof(open_addr_t));
-    myID = idmanager_getMyID(ADDR_64B);
-    memcpy(&(addr->addr_64b), myID->addr_64b, 4);
+    memcpy(&(addr->addr_64b), myId->addr_64b, 4);
 }
 
 void macpong_addToFixedSchedule(uint8_t id[], uint8_t rx_cell, uint8_t tx_cell) {
@@ -153,8 +151,6 @@ void macpong_initSend(opentimer_id_t id) {
        temp_neighbor.type             = ADDR_64B;
 
        unsigned myNumber = _getNodeNumber();
-       openserial_printError(COMPONENT_ICN, ERR_DEBUG1,
-               (errorparameter_t) myNumber, (errorparameter_t) id);
 
        if (myNumber == 0) {
            memcpy(&(temp_neighbor.addr_64b[4]), rootId, 4);
@@ -175,12 +171,8 @@ void macpong_send(uint8_t payloadCtr, open_addr_t *dst) {
 
     pkt = openqueue_getFreePacketBuffer(COMPONENT_ICN);
     if (pkt==NULL) {
-        openserial_printError(
-                COMPONENT_ICN,
-                ERR_NO_FREE_PACKET_BUFFER,
-                (errorparameter_t)0,
-                (errorparameter_t)0
-                );
+        openserial_printError(COMPONENT_ICN, ERR_NO_FREE_PACKET_BUFFER,
+                (errorparameter_t)0, (errorparameter_t)0);
         return;
     }
     pkt->creator                   = COMPONENT_ICN;
