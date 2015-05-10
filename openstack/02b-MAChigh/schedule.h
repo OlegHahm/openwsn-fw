@@ -17,17 +17,17 @@
 
 The superframe repears over time and can be arbitrarly long.
 */
-#define SUPERFRAME_LENGTH    11 //should be 101
+#define SUPERFRAME_LENGTH    101 //should be 101
 
 //draft-ietf-6tisch-minimal-06
 #define SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS                      1
 #define SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET                        0
-#define SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET                     0
+#define SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET                     10
 #define SCHEDULE_MINIMAL_6TISCH_DEFAULT_SLOTFRAME_HANDLE          1 //id of slotframe
 #define SCHEDULE_MINIMAL_6TISCH_DEFAULT_SLOTFRAME_NUMBER          1 //1 slotframe by default.
 
 #define NUMSERIALRX          1
-#define NUMSLOTSOFF          3
+#define NUMSLOTSOFF          20
 
 /**
 \brief Maximum number of active slots in a superframe.
