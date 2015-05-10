@@ -784,8 +784,15 @@ port_INLINE void sixtop_sendEB() {
    uint8_t len;
    
    len = 0;
+
+   openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+                            (errorparameter_t)0,
+                            (errorparameter_t)0);
    
    if ((ieee154e_isSynch()==FALSE) || (neighbors_getMyDAGrank()==DEFAULTDAGRANK)){
+       openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+                            (errorparameter_t)1,
+                            (errorparameter_t)1);
       // I'm not sync'ed or I did not acquire a DAGrank
       
       // delete packets genereted by this module (EB and KA) from openqueue
@@ -799,11 +806,17 @@ port_INLINE void sixtop_sendEB() {
    }
    
    if (sixtop_vars.busySendingEB==TRUE) {
+       openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+                            (errorparameter_t)2,
+                            (errorparameter_t)2);
       // don't continue if I'm still sending a previous EB
       return;
    }
    
    // if I get here, I will send an EB
+       openserial_printError(COMPONENT_SIXTOP,ERR_COMMAND_NOT_ALLOWED,
+                            (errorparameter_t)3,
+                            (errorparameter_t)3);
    
    // get a free packet buffer
    eb = openqueue_getFreePacketBuffer(COMPONENT_SIXTOP);
