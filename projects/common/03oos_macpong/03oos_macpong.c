@@ -35,7 +35,7 @@ open_addr_t *myId;
 
 void macpong_initSend(opentimer_id_t id);
 void macpong_send(uint8_t payloadCtr, open_addr_t *dst);
-void macpong_addToFixedSchedule(uint8_t id[], uint8_t rx_cell, uint8_t tx_cell);
+void macpong_addToFixedSchedule(uint8_t id[], int16_t rx_cell, int16_t tx_cell, int16_t shared);
 
 static inline unsigned _getNodeNumber(void);
 
@@ -82,8 +82,9 @@ int mote_main(void) {
    if ((myId->addr_64b[4] == rootId[0]) && (myId->addr_64b[5] == rootId[1]) &&
            (myId->addr_64b[6] == rootId[2]) && (myId->addr_64b[7] == rootId[3])) {
        idmanager_setIsDAGroot(TRUE);
+       macpong_addToFixedSchedule(node_ids[0], -1, -1, 3);
        for (int i = 0; i < NUMBER_OF_NODES; i++) {
-           macpong_addToFixedSchedule(node_ids[i], 2*i+1, 2*i+2);
+           macpong_addToFixedSchedule(node_ids[i], 3*i+1, 3*i+2, -1);
        }
    }
    else {
@@ -93,11 +94,11 @@ int mote_main(void) {
            if ((myId->addr_64b[4] == node_ids[i][0]) && (myId->addr_64b[5] == node_ids[i][1]) &&
                    (myId->addr_64b[6] == node_ids[i][2]) && (myId->addr_64b[7] == node_ids[i][3])) {
                if (i == 0) {
-                   macpong_addToFixedSchedule(rootId, 2*i+2, 2*i+1);
-                   macpong_addToFixedSchedule(node_ids[i+1], 2*i+4, 2*i+3);
+                   macpong_addToFixedSchedule(rootId, 3*i+2, 2*i+1, 3);
+                   macpong_addToFixedSchedule(node_ids[i+1], 3*i+5, 3*i+4, 3*i+6);
                }
                else {
-                   macpong_addToFixedSchedule(node_ids[i-1], 2*(i-1)+3, 2*(i-1)+4);
+                   macpong_addToFixedSchedule(node_ids[i-1], 3*(i-1)+4, 3*(i-1)+5, 3*(i-1)+6);
                }
            }
        }
@@ -121,25 +122,39 @@ void macpong_setPrefix(open_addr_t *addr) {
     memcpy(&(addr->addr_64b), myId->addr_64b, 4);
 }
 
-void macpong_addToFixedSchedule(uint8_t id[], uint8_t rx_cell, uint8_t tx_cell) {
+void macpong_addToFixedSchedule(uint8_t id[], int16_t rx_cell, int16_t tx_cell, int16_t shared) {
     open_addr_t     temp_neighbor;
 
     macpong_setPrefix(&temp_neighbor);
     temp_neighbor.type             = ADDR_64B;
     memcpy(&(temp_neighbor.addr_64b[4]), id, 4);
 
-    schedule_addActiveSlot(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS + tx_cell,
-            CELLTYPE_TX,
-            FALSE,
-            SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET,
-            &temp_neighbor
-            );
-    schedule_addActiveSlot(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS + rx_cell,
-            CELLTYPE_RX,
-            FALSE,
-            SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET,
-            &temp_neighbor
-            );
+    if (tx_cell >= 0) {
+        schedule_addActiveSlot(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS + tx_cell,
+                CELLTYPE_TX,
+                FALSE,
+                SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET,
+                &temp_neighbor
+                );
+    }
+    if (rx_cell >= 0) {
+        schedule_addActiveSlot(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS + rx_cell,
+                CELLTYPE_RX,
+                FALSE,
+                SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET,
+                &temp_neighbor
+                );
+    }
+    if (shared >= 0) {
+        memset(&temp_neighbor,0,sizeof(temp_neighbor));
+        temp_neighbor.type             = ADDR_ANYCAST;
+        schedule_addActiveSlot(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS + shared,
+                CELLTYPE_TXRX,
+                TRUE,
+                SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET,
+                &temp_neighbor
+                );
+    }
 }
 
 void macpong_initSend(opentimer_id_t id) {
@@ -160,6 +175,10 @@ void macpong_initSend(opentimer_id_t id) {
        else {
            memcpy(&(temp_neighbor.addr_64b[4]), node_ids[myNumber-1], 4);
        }
+       /*  remove default slot  */
+       memset(&temp_neighbor,0,sizeof(temp_neighbor));
+       temp_neighbor.type             = ADDR_ANYCAST;
+       schedule_removeActiveSlot(0, &temp_neighbor);
        // send packet
        macpong_send(0, &temp_neighbor);
        // cancel timer
