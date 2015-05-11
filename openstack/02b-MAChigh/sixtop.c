@@ -553,7 +553,8 @@ void task_sixtopNotifSendDone() {
 void task_sixtopNotifReceive() {
    OpenQueueEntry_t* msg;
    uint16_t          lenIE;
-   
+  
+
    // get received packet from openqueue
    msg = openqueue_sixtopGetReceivedPacket();
    if (msg==NULL) {
@@ -606,6 +607,9 @@ void task_sixtopNotifReceive() {
             // send to upper layer
             iphc_receive(msg);
          } else {
+             openserial_printInfo(COMPONENT_SIXTOP, ERR_DEBUG2,
+                     (errorparameter_t) 105,
+                     (errorparameter_t) 105);
             // free up the RAM
             openqueue_freePacketBuffer(msg);
          }
