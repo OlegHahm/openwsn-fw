@@ -31,6 +31,8 @@ macpong_vars_t macpong_vars;
 
 open_addr_t *myId;
 
+unsigned slot0isActive = 1;
+
 //=========================== prototypes ======================================
 
 void macpong_initSend(opentimer_id_t id);
@@ -138,6 +140,9 @@ void macpong_addToFixedSchedule(uint8_t id[], int16_t rx_cell, int16_t tx_cell, 
                 );
     }
     if (rx_cell >= 0) {
+        if (rx_cell == 0) {
+            rx_cell = -1;
+        }
         schedule_addActiveSlot(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS + rx_cell,
                 CELLTYPE_RX,
                 FALSE,
@@ -175,14 +180,25 @@ void macpong_initSend(opentimer_id_t id) {
        else {
            memcpy(&(temp_neighbor.addr_64b[4]), node_ids[myNumber-1], 4);
        }
-       /*  remove default slot  */
-       memset(&temp_neighbor,0,sizeof(temp_neighbor));
-       temp_neighbor.type             = ADDR_ANYCAST;
-       schedule_removeActiveSlot(0, &temp_neighbor);
        // send packet
        macpong_send(0, &temp_neighbor);
+      
+       if (slot0isActive) {
+           /*  remove default slot  */
+           memset(&temp_neighbor,0,sizeof(temp_neighbor));
+           temp_neighbor.type             = ADDR_ANYCAST;
+           schedule_removeActiveSlot(0, &temp_neighbor);
+           slot0isActive = 0;
+           macpong_addToFixedSchedule(rootId, 0, -1, -1);
+       }
        // cancel timer
        //opentimers_stop(macpong_vars.timerId);
+   }
+   else {
+       if (!slot0isActive) {
+           macpong_addToFixedSchedule(node_ids[0], -1, -1, 0);
+           slot0isActive = 1;
+       }
    }
 }
 
