@@ -270,6 +270,9 @@ void isr_ieee154e_timer() {
 This function executes in ISR mode.
 */
 void ieee154e_startOfFrame(PORT_RADIOTIMER_WIDTH capturedTime) {
+   openserial_printError(COMPONENT_IEEE802154E, ERR_DEBUG2,
+           (errorparameter_t)ieee154e_vars.state,
+           (errorparameter_t)0);
    if (ieee154e_vars.isSync==FALSE) {
      activity_synchronize_startOfFrame(capturedTime);
    } else {
@@ -445,6 +448,9 @@ port_INLINE void activity_synchronize_startOfFrame(PORT_RADIOTIMER_WIDTH capture
    
    // don't care about packet if I'm not listening
    if (ieee154e_vars.state!=S_SYNCLISTEN) {
+      openserial_printError(COMPONENT_IEEE802154E, ERR_WRONG_STATE_IN_STARTSLOT,
+                            (errorparameter_t)ieee154e_vars.state,
+                            (errorparameter_t)0);
       return;
    }
    
