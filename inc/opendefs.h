@@ -235,7 +235,7 @@ enum {
    ERR_ICN_SEND                        = 0x3a, // ICN sending {0} to: {1}
    ERR_ICN_RECV                        = 0x3b, // ICN receiving {0} from {1}
    ERR_DEBUG1                          = 0x3c, // DEBUG1: {0} {1}
-   ERR_DEBUG2                          = 0x3d, // DEBUG3: {0} {1}
+   ERR_DEBUG2                          = 0x3d, // DEBUG2: {0} {1}
    ERR_DEBUG3                          = 0x3e, // DEBUG3: {0} {1}
    ERR_DEBUG4                          = 0x3f, // DEBUG4: {0} {1}
 };
