@@ -874,6 +874,10 @@ port_INLINE void activity_ti1ORri1() {
                ieee154e_getAsn(sync_IE.asn);
                sync_IE.join_priority = neighbors_getMyDAGrank()/(2*MINHOPRANKINCREASE); //poipoi -- use dagrank(rank)
                memcpy(ieee154e_vars.dataToSend->l2_ASNpayload,&sync_IE,sizeof(sync_IE_ht));
+
+               openserial_printInfo(COMPONENT_IEEE802154E, ERR_DEBUG4,
+                       (errorparameter_t)ieee154e_vars.state,
+                       (errorparameter_t)ieee154e_vars.slotOffset);
             }
             // record that I attempt to transmit this packet
             ieee154e_vars.dataToSend->l2_numTxAttempts++;
