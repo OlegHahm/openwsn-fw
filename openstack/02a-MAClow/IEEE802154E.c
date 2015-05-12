@@ -529,6 +529,8 @@ port_INLINE void activity_synchronize_endOfFrame(PORT_RADIOTIMER_WIDTH capturedT
       
       // break if invalid CRC
       if (ieee154e_vars.dataReceived->l1_crc==FALSE) {
+          openserial_printError(COMPONENT_IEEE802154E, ERR_DEBUG1,
+                  (errorparameter_t) 32, (errorparameter_t) capturedTime);
          // break from the do-while loop and execute abort code below
          break;
       }
@@ -539,6 +541,8 @@ port_INLINE void activity_synchronize_endOfFrame(PORT_RADIOTIMER_WIDTH capturedT
       // break if invalid IEEE802.15.4 header
       if (ieee802514_header.valid==FALSE) {
          // break from the do-while loop and execute the clean-up code below
+          openserial_printError(COMPONENT_IEEE802154E, ERR_DEBUG1,
+                  (errorparameter_t) 22, (errorparameter_t) capturedTime);
          break;
       }
       
@@ -561,6 +565,11 @@ port_INLINE void activity_synchronize_endOfFrame(PORT_RADIOTIMER_WIDTH capturedT
                packetfunctions_sameAddress(&ieee802514_header.panid,idmanager_getMyID(ADDR_PANID)) &&
                ieee154e_processIEs(ieee154e_vars.dataReceived,&lenIE)
             )==FALSE) {
+          if (ieee802514_header.frameType!=IEEE154_TYPE_BEACON) {
+              openserial_printError(COMPONENT_IEEE802154E, ERR_DEBUG1,
+                      (errorparameter_t) 55,
+                      (errorparameter_t) ieee802514_header.frameType);
+          }
          // break from the do-while loop and execute the clean-up code below
          break;
       }
@@ -708,6 +717,8 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
                   break;
                
                default:
+                  openserial_printError(COMPONENT_IEEE802154E, ERR_DEBUG1,
+                          (errorparameter_t) 77, (errorparameter_t) subid);
                   return FALSE;
                   break;
             }
@@ -751,6 +762,8 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
          
       default:
          *lenIE = 0; //no header or not recognized.
+          openserial_printError(COMPONENT_IEEE802154E, ERR_DEBUG1,
+                  (errorparameter_t) 88, (errorparameter_t) gr_elem_id);
          return FALSE;
    }
    
