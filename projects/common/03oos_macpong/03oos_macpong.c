@@ -182,7 +182,6 @@ void macpong_initSend(opentimer_id_t id) {
        }
        // send packet
        macpong_send(0, &temp_neighbor);
-      
        if (slot0isActive) {
            /*  remove default slot  */
            memset(&temp_neighbor,0,sizeof(temp_neighbor));
@@ -308,3 +307,31 @@ void techo_init(void)             { return; }
 // UDP
 void uecho_init(void)             { return; }
 
+void HardFault_Handler(void) {
+    openserial_printInfo(COMPONENT_NULL, ERR_TCP_RESET,
+            0, 0);
+    while(1)
+    {
+    }
+}
+void NMI_Handler(void) {
+    openserial_printInfo(COMPONENT_NULL, ERR_TCP_RESET,
+            1, 1);
+    while(1)
+    {
+    }
+}
+void MemManage_Handler(void) {
+    openserial_printInfo(COMPONENT_NULL, ERR_TCP_RESET,
+            2, 2);
+    while(1)
+    {
+    }
+}
+void BusFault_Handler(void) {
+    openserial_printInfo(COMPONENT_NULL, ERR_TCP_RESET,
+            3, 3);
+    while(1)
+    {
+    }
+}
