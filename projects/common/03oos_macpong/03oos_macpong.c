@@ -308,28 +308,28 @@ void techo_init(void)             { return; }
 void uecho_init(void)             { return; }
 
 void HardFault_Handler(void) {
-    openserial_printInfo(COMPONENT_NULL, ERR_TCP_RESET,
+    openserial_printCritical(COMPONENT_NULL, ERR_FAULT_HANDLER,
             0, 0);
     while(1)
     {
     }
 }
 void NMI_Handler(void) {
-    openserial_printInfo(COMPONENT_NULL, ERR_TCP_RESET,
+    openserial_printCritical(COMPONENT_NULL, ERR_FAULT_HANDLER,
             1, 1);
     while(1)
     {
     }
 }
 void MemManage_Handler(void) {
-    openserial_printInfo(COMPONENT_NULL, ERR_TCP_RESET,
+    openserial_printCritical(COMPONENT_NULL, ERR_FAULT_HANDLER,
             2, 2);
     while(1)
     {
     }
 }
 void BusFault_Handler(void) {
-    openserial_printInfo(COMPONENT_NULL, ERR_TCP_RESET,
+    openserial_printCritical(COMPONENT_NULL, ERR_FAULT_HANDLER,
             3, 3);
     while(1)
     {
