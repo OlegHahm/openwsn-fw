@@ -226,7 +226,7 @@ void  schedule_getSlotInfo(
    // find an empty schedule entry container
    slotContainer = &schedule_vars.scheduleBuf[0];
    uint16_t cnt = 1;
-   while (slotContainer<=&schedule_vars.scheduleBuf[schedule_vars.maxActiveSlots-1] && cnt++) {
+   while (slotContainer<=&schedule_vars.scheduleBuf[schedule_vars.maxActiveSlots-1] && ++cnt) {
        //check that this entry for that neighbour and timeslot is not already scheduled.
        if (packetfunctions_sameAddress(neighbor,&(slotContainer->neighbor))&& (slotContainer->slotOffset==slotOffset)){
                //it exists so this is an update.
@@ -237,7 +237,7 @@ void  schedule_getSlotInfo(
         }
         slotContainer++;
    }
-   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_DEBUG3, 2, cnt);
+   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_BREAK_COND, 2, cnt);
    //return cell type off.
    info->link_type                 = CELLTYPE_OFF;
    info->shared                    = FALSE;
@@ -319,7 +319,7 @@ owerror_t schedule_addActiveSlot(
       // find position in schedule
       previousSlotWalker                    = schedule_vars.currentScheduleEntry;
       uint16_t cnt = 1;
-      while (1) {
+      while (++cnt) {
          nextSlotWalker                     = previousSlotWalker->next;
          if (
                (
@@ -340,9 +340,8 @@ owerror_t schedule_addActiveSlot(
             break;
          }
          previousSlotWalker                 = nextSlotWalker;
-         if (!(cnt++)) break;
       }
-      if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_DEBUG3, 4, cnt);
+      if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_BREAK_COND, 4, cnt);
       // insert between previousSlotWalker and nextSlotWalker
       previousSlotWalker->next              = slotContainer;
       slotContainer->next                   = nextSlotWalker;
@@ -369,7 +368,7 @@ owerror_t schedule_removeActiveSlot(slotOffset_t slotOffset, open_addr_t* neighb
    // find the schedule entry
    slotContainer = &schedule_vars.scheduleBuf[0];
    uint16_t cnt = 1;
-   while (slotContainer<=&schedule_vars.scheduleBuf[schedule_vars.maxActiveSlots-1] && cnt++) {
+   while (slotContainer<=&schedule_vars.scheduleBuf[schedule_vars.maxActiveSlots-1] && ++cnt) {
       if (
             slotContainer->slotOffset==slotOffset
             &&
@@ -379,7 +378,7 @@ owerror_t schedule_removeActiveSlot(slotOffset_t slotOffset, open_addr_t* neighb
       }
       slotContainer++;
    }
-   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_DEBUG3, 5, cnt);
+   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_BREAK_COND, 5, cnt);
    
    // abort it could not find
    if (slotContainer>&schedule_vars.scheduleBuf[schedule_vars.maxActiveSlots-1]) {
@@ -408,14 +407,13 @@ owerror_t schedule_removeActiveSlot(slotOffset_t slotOffset, open_addr_t* neighb
       previousSlotWalker                    = schedule_vars.currentScheduleEntry;
      
       uint16_t cnt = 1;
-      while (1) {
+      while (++cnt) {
          if (previousSlotWalker->next==slotContainer){
             break;
          }
          previousSlotWalker                 = previousSlotWalker->next;
-         if (!(cnt++)) break;
       }
-   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_DEBUG3, 6, cnt);
+   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_BREAK_COND, 6, cnt);
       
       // remove this element from the linked list, i.e. have the previous slot
       // "jump" to slotContainer's next
@@ -450,8 +448,8 @@ bool schedule_isSlotOffsetAvailable(uint16_t slotOffset){
           return FALSE;
       }
       scheduleWalker = scheduleWalker->next;
-   }while(scheduleWalker!=schedule_vars.currentScheduleEntry && cnt++);
-   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_DEBUG3, 8, cnt);
+   }while(scheduleWalker!=schedule_vars.currentScheduleEntry && ++cnt);
+   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_BREAK_COND, 8, cnt);
    
    ENABLE_INTERRUPTS();
    
@@ -475,8 +473,8 @@ scheduleEntry_t* schedule_statistic_poorLinkQuality(){
          break;
       }
       scheduleWalker = scheduleWalker->next;
-   }while(scheduleWalker!=schedule_vars.currentScheduleEntry && cnt++);
-   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_DEBUG3, 9, cnt);
+   }while(scheduleWalker!=schedule_vars.currentScheduleEntry && ++cnt);
+   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_BREAK_COND, 9, cnt);
    
    if (scheduleWalker == schedule_vars.currentScheduleEntry){
        ENABLE_INTERRUPTS();
@@ -495,10 +493,10 @@ void schedule_syncSlotOffset(slotOffset_t targetSlotOffset) {
    DISABLE_INTERRUPTS();
   
    uint16_t cnt = 1;
-   while (schedule_vars.currentScheduleEntry->slotOffset!=targetSlotOffset && cnt++) {
+   while (schedule_vars.currentScheduleEntry->slotOffset!=targetSlotOffset && ++cnt) {
       schedule_advanceSlot();
    }
-   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_DEBUG3, 1, cnt);
+   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_BREAK_COND, 1, cnt);
    
    ENABLE_INTERRUPTS();
 }
