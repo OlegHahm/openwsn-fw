@@ -419,18 +419,29 @@ void iphc_init(void) {
 
 void iphc_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
     msg->owner = COMPONENT_ICN;
-    openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
-                          2, (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+    //openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND, 2, (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
     openqueue_freePacketBuffer(msg);
 }
 
 void iphc_receive(OpenQueueEntry_t* msg) {
     msg->owner = COMPONENT_ICN;
-    openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV,
-                          1, (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
     if (idmanager_getIsDAGroot()==TRUE) {
-        openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
-                44, (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+        openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
+                (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
+                (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+        openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV2,
+                (errorparameter_t) msg->payload[0],
+                (errorparameter_t) msg->payload[1]);
+    }
+    else {
+        /*
+        openserial_printInfo(COMPONENT_ICN, ERR_ICN_FWD1,
+                (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
+                (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+        openserial_printInfo(COMPONENT_ICN, ERR_ICN_FWD2,
+                (errorparameter_t) node_ids[0].addr_64b[6],
+                (errorparameter_t) node_ids[0].addr_64b[7]);
+        */
         macpong_send(++msg->payload[0], &(node_ids[0]));
     }
     openqueue_freePacketBuffer(msg);
