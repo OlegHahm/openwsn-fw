@@ -199,15 +199,14 @@ int mote_main(void) {
 
 unsigned _linkIsScheduled(open_addr_t *dst) {
    for (int i = 0; i < SCHEDULE_SIZE; i++) {
-       if ((memcmp(myId, mySchedule[i].sender, sizeof(open_addr_t)) == 0) && (memcmp(dst, mySchedule[i].sender, sizeof(open_addr_t)) == 0)) {
+       if ((memcmp(myId, mySchedule[i].sender, sizeof(open_addr_t)) == 0) && (memcmp(dst, mySchedule[i].receiver, sizeof(open_addr_t)) == 0)) {
            return 1;
        }
    }
-
-    return 0;
+   return 0;
 }
 
-open_addr_t *_routeLookup(open_addr_t *dst) {
+open_addr_t* _routeLookup(open_addr_t *dst) {
     open_addr_t *next = NULL;
     /* iterate over routing table  */
    for (int i = 0; i < RRT_SIZE; i++) {
