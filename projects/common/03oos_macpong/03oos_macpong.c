@@ -45,6 +45,7 @@ macpong_vars_t macpong_vars;
 open_addr_t *myId;
 
 unsigned slot0isActive = 1;
+uint16_t send_counter = 0;
 
 //=========================== prototypes ======================================
 
@@ -52,7 +53,7 @@ void macpong_initSend(opentimer_id_t id);
 void macpong_send(uint8_t payloadCtr, open_addr_t *dst);
 void macpong_addToFixedSchedule(open_addr_t *addr, int16_t rx_cell, int16_t tx_cell, int16_t shared);
 unsigned _linkIsScheduled(open_addr_t *dst);
-open_addr_t *_routeLookup(open_addr_t *dst);
+open_addr_t* _routeLookup(open_addr_t *dst);
 
 //=========================== initialization ==================================
 
@@ -265,21 +266,19 @@ void macpong_initSend(opentimer_id_t id) {
     }
 
    if (ieee154e_isSynch()==TRUE && neighbors_getNumNeighbors()>=1) {
-       open_addr_t dst;
-       neighbors_getNeighbor(&dst, ADDR_64B, 0);
-
-       // send packet
-       macpong_send(0, &dst);
+       // send packet to root
+       openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
+               send_counter, (errorparameter_t) node_ids[0].addr_64b[7]);
+       macpong_send(send_counter++, &node_ids[0]);
        if (slot0isActive) {
            /*  remove default slot  */
-           memset(&dst,0,sizeof(dst));
-           dst.type             = ADDR_ANYCAST;
-           schedule_removeActiveSlot(0, &dst);
+           open_addr_t tmp;
+           memset(&tmp,0,sizeof(open_addr_t));
+           tmp.type             = ADDR_ANYCAST;
+           schedule_removeActiveSlot(0, &tmp);
            slot0isActive = 0;
            macpong_addToFixedSchedule(&(node_ids[0]), 0, -1, -1);
        }
-       // cancel timer
-       //opentimers_stop(macpong_vars.timerId);
    }
    else {
        if (!slot0isActive) {
@@ -354,7 +353,7 @@ void iphc_receive(OpenQueueEntry_t* msg) {
     if (idmanager_getIsDAGroot()==TRUE) {
         openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
                 44, (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
-        macpong_send(++msg->payload[0], &(msg->l2_nextORpreviousHop));
+        macpong_send(++msg->payload[0], &(node_ids[0]));
     }
     openqueue_freePacketBuffer(msg);
 }
