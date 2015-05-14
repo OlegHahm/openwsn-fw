@@ -235,11 +235,14 @@ enum {
    ERR_FAULT_HANDLER                   = 0x3a, // Fault handler {0} fired
    ERR_BREAK_COND                      = 0x3b, // Hit break condition {0} {1}
    ERR_ICN_SEND                        = 0x3c, // ICN sending {0} to: {1}
-   ERR_ICN_RECV                        = 0x3d, // ICN receiving {0} from {1}
-   ERR_DEBUG1                          = 0x3e, // DEBUG1: {0} {1}
-   ERR_DEBUG2                          = 0x3f, // DEBUG2: {0} {1}
-   ERR_DEBUG3                          = 0x40, // DEBUG3: {0} {1}
-   ERR_DEBUG4                          = 0x41, // DEBUG4: {0} {1}
+   ERR_ICN_FWD1                        = 0x3d, // ICN forwarding from {0}-{1}
+   ERR_ICN_FWD2                        = 0x3e, // ICN forwarding to {0}-{1}
+   ERR_ICN_RECV1                       = 0x3f, // ICN receiving from {0}-{1}
+   ERR_ICN_RECV2                       = 0x40, // ICN receiving: payload {0}, {1}
+   ERR_DEBUG1                          = 0x41, // DEBUG1: {0} {1}
+   ERR_DEBUG2                          = 0x42, // DEBUG2: {0} {1}
+   ERR_DEBUG3                          = 0x43, // DEBUG3: {0} {1}
+   ERR_DEBUG4                          = 0x44, // DEBUG4: {0} {1}
 };
 
 //=========================== typedef =========================================
