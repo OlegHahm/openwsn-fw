@@ -32,7 +32,13 @@ typedef struct {
 typedef struct {
     open_addr_t *sender;
     open_addr_t *receiver;
-} macpong_scheduled_link_t;
+} macpong_link_t;
+
+typedef struct {
+    open_addr_t *id;
+    open_addr_t *dst;
+    open_addr_t *nextHop;
+} macpong_routing_entry_t;
 
 macpong_vars_t macpong_vars;
 
@@ -45,6 +51,8 @@ unsigned slot0isActive = 1;
 void macpong_initSend(opentimer_id_t id);
 void macpong_send(uint8_t payloadCtr, open_addr_t *dst);
 void macpong_addToFixedSchedule(open_addr_t *addr, int16_t rx_cell, int16_t tx_cell, int16_t shared);
+unsigned _linkIsScheduled(open_addr_t *dst);
+open_addr_t *_routeLookup(open_addr_t *dst);
 
 //=========================== initialization ==================================
 
@@ -91,7 +99,7 @@ open_addr_t node_ids[NUMBER_OF_NODES] = {
 
 #define SCHEDULE_SIZE   (5 + (7*2)) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
 
-macpong_scheduled_link_t  mySchedule[SCHEDULE_SIZE] = {
+macpong_link_t  mySchedule[SCHEDULE_SIZE] = {
     /* broadcast cell for NODE_01 */
     {&(node_ids[0]), NULL},
     /* link from 01 to 02 */
@@ -128,6 +136,24 @@ macpong_scheduled_link_t  mySchedule[SCHEDULE_SIZE] = {
     /* broadcast cell for NODE_05 */
     {&(node_ids[4]), NULL},
 };
+
+#define RRT_SIZE        (6)
+macpong_routing_entry_t routing_table[RRT_SIZE] = {
+    /* default route for 02 over 01 */
+    {&(node_ids[1]), NULL, &(node_ids[0])},
+    /* default route for 03 over 02 */
+    {&(node_ids[2]), NULL, &(node_ids[1])},
+    /* default route for 04 over 01 */
+    {&(node_ids[3]), NULL, &(node_ids[0])},
+    /* default route for 05 over 02 */
+    {&(node_ids[4]), NULL, &(node_ids[1])},
+
+    /* route for 01 to 03 over 02 */
+    {&(node_ids[0]), &(node_ids[2]), &(node_ids[1])},
+    /* route for 01 to 05 over 02 */
+    {&(node_ids[0]), &(node_ids[4]), &(node_ids[1])},
+};
+
 #endif
 
 int mote_main(void) {
@@ -168,6 +194,36 @@ int mote_main(void) {
 
    scheduler_start();
    return 0; // this line should never be reached
+}
+
+unsigned _linkIsScheduled(open_addr_t *dst) {
+   for (int i = 0; i < SCHEDULE_SIZE; i++) {
+       if ((memcmp(myId, mySchedule[i].sender, sizeof(open_addr_t)) == 0) && (memcmp(dst, mySchedule[i].sender, sizeof(open_addr_t)) == 0)) {
+           return 1;
+       }
+   }
+
+    return 0;
+}
+
+open_addr_t *_routeLookup(open_addr_t *dst) {
+    open_addr_t *next = NULL;
+    /* iterate over routing table  */
+   for (int i = 0; i < RRT_SIZE; i++) {
+       /* find entries for this node */
+       if (memcmp(myId, routing_table[i].id, sizeof(open_addr_t)) == 0) {
+           /* dedicated route found, use it */
+           if (memcmp(dst, routing_table[i].dst, sizeof(open_addr_t)) == 0) {
+               return routing_table[i].nextHop;
+           }
+           /* default route found, remember */
+           if (routing_table[i].dst == NULL) {
+               next = routing_table[i].nextHop;
+           }
+       }
+   }
+   /* return either default route or NULL */
+   return next;
 }
 
 void macpong_addToFixedSchedule(open_addr_t *addr, int16_t rx_cell, int16_t tx_cell, int16_t shared) {
@@ -246,6 +302,18 @@ void macpong_send(uint8_t payloadCtr, open_addr_t *dst) {
     pkt->creator                   = COMPONENT_ICN;
     pkt->owner                     = COMPONENT_ICN;
     pkt->l2_nextORpreviousHop.type = ADDR_64B;
+    
+    /* find next hop */
+    if (!_linkIsScheduled(dst)) {
+        dst = _routeLookup(dst);
+        if (dst == NULL) {
+            openserial_printError(COMPONENT_ICN, ERR_NO_NEXTHOP,
+                    (errorparameter_t) dst->addr_64b[6],
+                    (errorparameter_t) dst->addr_64b[7]);
+            openqueue_freePacketBuffer(pkt);
+            return;
+        }
+    }
 
     memcpy(&pkt->l2_nextORpreviousHop, dst, sizeof(open_addr_t));
 
