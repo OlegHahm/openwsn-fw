@@ -496,7 +496,7 @@ void schedule_syncSlotOffset(slotOffset_t targetSlotOffset) {
    while (schedule_vars.currentScheduleEntry->slotOffset!=targetSlotOffset && ++cnt) {
       schedule_advanceSlot();
    }
-   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_BREAK_COND, 1, cnt);
+   if (!cnt) openserial_printCritical(COMPONENT_SCHEDULE, ERR_BREAK_COND, 1, targetSlotOffset);
    
    ENABLE_INTERRUPTS();
 }
