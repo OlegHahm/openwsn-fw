@@ -382,20 +382,20 @@ void macpong_send(uint8_t payloadCtr, open_addr_t *dst) {
     
     /* find next hop */
     if (!_linkIsScheduled(dst)) {
-        dst = _routeLookup(dst);
-        if (dst == NULL) {
+        open_addr_t *tmp;
+        tmp = _routeLookup(dst);
+        if (tmp == NULL) {
             openserial_printError(COMPONENT_ICN, ERR_NO_NEXTHOP,
                     (errorparameter_t) dst->addr_64b[6],
                     (errorparameter_t) dst->addr_64b[7]);
             openqueue_freePacketBuffer(pkt);
             return;
         }
+        dst = tmp;
     }
 
     memcpy(&pkt->l2_nextORpreviousHop, dst, sizeof(open_addr_t));
 
-    openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
-                          1, (errorparameter_t) dst->addr_64b[7]);
 
     packetfunctions_reserveHeaderSize(pkt,LEN_PAYLOAD);
     ((uint8_t*)pkt->payload)[0]    = payloadCtr;
