@@ -173,7 +173,7 @@ open_addr_t node_ids[NUMBER_OF_NODES] = {
     NODE_05
 };
 
-#define SCHEDULE_SIZE   (5 + (7*2)) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
+#define SCHEDULE_SIZE   (5 + (7*2) + 4) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
 
 macpong_link_t  mySchedule[SCHEDULE_SIZE] = {
     /* broadcast cell for NODE_01 */
@@ -181,9 +181,13 @@ macpong_link_t  mySchedule[SCHEDULE_SIZE] = {
     /* link from 01 to 02 */
     {&(node_ids[1]), &(node_ids[0])},
     {&(node_ids[0]), &(node_ids[1])},
-    /* link from 01 to 03 */
-    {&(node_ids[2]), &(node_ids[0])},
-    {&(node_ids[0]), &(node_ids[2])},
+    {&(node_ids[1]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[1])},
+    /* link from 01 to 04 */
+    {&(node_ids[3]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[3])},
 
     /* broadcast cell for NODE_02 */
     {&(node_ids[1]), NULL},
