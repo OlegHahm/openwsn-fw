@@ -59,9 +59,79 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 
 #ifdef SIMU
 #warning SIMULATION build
-#define NUMBER_OF_NODES (1)
-uint8_t rootId[4] = {0, 0, 0, 1};
-uint8_t node_ids[NUMBER_OF_NODES][4] = {{0, 0, 0, 2}};
+#define NUMBER_OF_NODES     (5)
+#define NODE_01     {.type = ADDR_64B, .addr_64b = {0x14, 0x15, 0x92, 0xcc, 0x00, 0x00, 0x00, 0x01}}
+#define NODE_02     {.type = ADDR_64B, .addr_64b = {0x14, 0x15, 0x92, 0xcc, 0x00, 0x00, 0x00, 0x02}}
+#define NODE_03     {.type = ADDR_64B, .addr_64b = {0x14, 0x15, 0x92, 0xcc, 0x00, 0x00, 0x00, 0x03}}
+#define NODE_04     {.type = ADDR_64B, .addr_64b = {0x14, 0x15, 0x92, 0xcc, 0x00, 0x00, 0x00, 0x04}}
+#define NODE_05     {.type = ADDR_64B, .addr_64b = {0x05, 0x15, 0x92, 0xcc, 0x00, 0x00, 0x00, 0x05}}
+
+open_addr_t node_ids[NUMBER_OF_NODES] = {
+    NODE_01,
+    NODE_02,
+    NODE_03,
+    NODE_04,
+    NODE_05,
+};
+
+#define SCHEDULE_SIZE   (NUMBER_OF_NODES + (7*2)) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
+
+macpong_link_t  mySchedule[SCHEDULE_SIZE] = {
+    /* broadcast cell for NODE_01 */
+    {&(node_ids[0]), NULL},
+    /* link from 01 to 02 */
+    {&(node_ids[1]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[1])},
+    /* link from 01 to 04 */
+    {&(node_ids[3]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[3])},
+
+    /* broadcast cell for NODE_02 */
+    {&(node_ids[1]), NULL},
+    /* link from 02 to 03 */
+    {&(node_ids[2]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[2])},
+    /* link from 02 to 04 */
+    {&(node_ids[3]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[3])},
+    /* link from 02 to 05 */
+    {&(node_ids[4]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[4])},
+
+    /* broadcast cell for NODE_03 */
+    {&(node_ids[2]), NULL},
+    /* link from 02 to 05 */
+    {&(node_ids[4]), &(node_ids[2])},
+    {&(node_ids[2]), &(node_ids[4])},
+
+    /* broadcast cell for NODE_04 */
+    {&(node_ids[3]), NULL},
+    /* link from 04 to 05 */
+    {&(node_ids[4]), &(node_ids[3])},
+    {&(node_ids[3]), &(node_ids[4])},
+    
+    /* broadcast cell for NODE_05 */
+    {&(node_ids[4]), NULL},
+};
+
+#define RRT_SIZE        (6)
+macpong_routing_entry_t routing_table[RRT_SIZE] = {
+    /* default route for 02 over 01 */
+    {&(node_ids[1]), NULL, &(node_ids[0])},
+    /* default route for 03 over 02 */
+    {&(node_ids[2]), NULL, &(node_ids[1])},
+    /* default route for 04 over 01 */
+    {&(node_ids[3]), NULL, &(node_ids[0])},
+    /* default route for 05 over 02 */
+    {&(node_ids[4]), NULL, &(node_ids[1])},
+
+    /* route for 01 to 03 over 02 */
+    {&(node_ids[0]), &(node_ids[2]), &(node_ids[1])},
+    /* route for 01 to 05 over 02 */
+    {&(node_ids[0]), &(node_ids[4]), &(node_ids[1])},
+};
+
+
 #else
 /*
 #define NUMBER_OF_NODES (8)
