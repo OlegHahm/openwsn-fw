@@ -62,6 +62,7 @@ uint16_t send_counter = 0;
 
 //=========================== prototypes ======================================
 
+void icn_makeReservation(icn_link_t *schedule, size_t len, size_t offset);
 void icn_initContent(open_addr_t *lastHop);
 void icn_initInterest(opentimer_id_t id);
 void icn_send(open_addr_t *dst, OpenQueueEntry_t *pkt);
@@ -195,7 +196,10 @@ open_addr_t node_ids[NUMBER_OF_NODES] = {
 };
 
 #define SSF_INT_SIZE    (5 + (7*2) + 4) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
-#define SSF_cs_SIZE     ((7*2) + 4) // (NUMBER_OF_LINKS * 2)
+#define SSF_INT_OFFSET  (NUMSERIALRX)
+
+#define SSF_CS_SIZE     ((7*2) + 4) // (NUMBER_OF_LINKS * 2)
+#define SSF_CS_OFFSET   (SSF_INT_OFFSET + SSF_INT_SIZE)
 
 icn_link_t ssf_int[SSF_INT_SIZE] = {
     /* broadcast cell for NODE_05 */
@@ -305,30 +309,34 @@ int mote_main(void) {
    else {
        neighbors_vars.myDAGrank = 44;
    }
-   /* iterate over the full schedule and make my reservations*/
-   for (int i = 0; i < SSF_INT_SIZE; i++) {
+
+   icn_makeReservation(ssf_int, SSF_INT_SIZE, SSF_INT_OFFSET);
+   scheduler_start();
+   return 0; // this line should never be reached
+}
+
+void icn_makeReservation(icn_link_t *schedule, size_t len, size_t offset) {
+    /* iterate over the full schedule and make my reservations*/
+   for (int i = 0; i < len; i++) {
        /*  if I am the sender... */
-       if (memcmp(myId, ssf_int[i].sender, ADDR_LEN_64B) == 0) {
+       if (memcmp(myId, schedule[i].sender, ADDR_LEN_64B) == 0) {
            /* without a particular receiver, schedule a shared cell */
-           if (ssf_int[i].receiver == NULL) {
-               icn_addToFixedSchedule(NULL, -1, -1, i+NUMSERIALRX);
+           if (schedule[i].receiver == NULL) {
+               icn_addToFixedSchedule(NULL, -1, -1, i+offset);
            }
            /* or for this particular receiver */
            else {
-               icn_addToFixedSchedule(ssf_int[i].receiver, -1, i+NUMSERIALRX, -1);
+               icn_addToFixedSchedule(schedule[i].receiver, -1, i+offset, -1);
            }
        }
        /* if I am the receiver or another node has shared cell, schedule an RX cell */
-       else if ((memcmp(myId, ssf_int[i].receiver, ADDR_LEN_64B) == 0) ||
-               (ssf_int[i].receiver == NULL)) {
+       else if ((memcmp(myId, schedule[i].receiver, ADDR_LEN_64B) == 0) ||
+               (schedule[i].receiver == NULL)) {
            {
-               icn_addToFixedSchedule(ssf_int[i].sender, i+NUMSERIALRX, -1, -1);
+               icn_addToFixedSchedule(schedule[i].sender, i+offset, -1, -1);
            }
        }
    }
-
-   scheduler_start();
-   return 0; // this line should never be reached
 }
 
 unsigned _linkIsScheduled(open_addr_t *dst) {
