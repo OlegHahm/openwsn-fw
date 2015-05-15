@@ -470,7 +470,7 @@ void icn_initInterest(opentimer_id_t id) {
     if (!idmanager_getIsDAGroot() && slot0isActive) {
         /*  remove default slot  */
         open_addr_t tmp;
-        memset(&tmp,0,ADDR_LEN_64B);
+        memset(&tmp,0,sizeof(open_addr_t));
         tmp.type             = ADDR_ANYCAST;
         schedule_removeActiveSlot(0, &tmp);
         slot0isActive = 0;
