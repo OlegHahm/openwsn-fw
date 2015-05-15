@@ -74,9 +74,10 @@ open_addr_t node_ids[NUMBER_OF_NODES] = {
     NODE_05,
 };
 
-#define SCHEDULE_SIZE   (NUMBER_OF_NODES + (7*2)) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
 
-macpong_link_t  mySchedule[SCHEDULE_SIZE] = {
+#define SSF_INT_SIZE   (NUMBER_OF_NODES + (7*2)) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
+
+macpong_link_t  ssf_int[SSF_INT_SIZE] = {
     /* broadcast cell for NODE_01 */
     {&(node_ids[0]), NULL},
     /* link from 01 to 02 */
@@ -173,21 +174,23 @@ open_addr_t node_ids[NUMBER_OF_NODES] = {
     NODE_05
 };
 
-#define SCHEDULE_SIZE   (5 + (7*2) + 4) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
+#define SSF_INT_SIZE    (5 + (7*2) + 4) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
+#define SSF_cs_SIZE     ((7*2) + 4) // (NUMBER_OF_LINKS * 2)
 
-macpong_link_t  mySchedule[SCHEDULE_SIZE] = {
-    /* broadcast cell for NODE_01 */
-    {&(node_ids[0]), NULL},
-    /* link from 01 to 02 */
-    {&(node_ids[1]), &(node_ids[0])},
-    {&(node_ids[0]), &(node_ids[1])},
-    {&(node_ids[1]), &(node_ids[0])},
-    {&(node_ids[0]), &(node_ids[1])},
-    {&(node_ids[1]), &(node_ids[0])},
-    {&(node_ids[0]), &(node_ids[1])},
-    /* link from 01 to 04 */
-    {&(node_ids[3]), &(node_ids[0])},
-    {&(node_ids[0]), &(node_ids[3])},
+macpong_link_t ssf_int[SSF_INT_SIZE] = {
+    /* broadcast cell for NODE_05 */
+    {&(node_ids[4]), NULL},
+
+    /* broadcast cell for NODE_04 */
+    {&(node_ids[3]), NULL},
+    /* link from 04 to 05 */
+    {&(node_ids[4]), &(node_ids[3])},
+ 
+    /* broadcast cell for NODE_03 */
+    {&(node_ids[2]), NULL},
+    /* link from 02 to 05 */
+    {&(node_ids[4]), &(node_ids[2])},
+    {&(node_ids[2]), &(node_ids[4])},
 
     /* broadcast cell for NODE_02 */
     {&(node_ids[1]), NULL},
@@ -201,21 +204,53 @@ macpong_link_t  mySchedule[SCHEDULE_SIZE] = {
     {&(node_ids[4]), &(node_ids[1])},
     {&(node_ids[1]), &(node_ids[4])},
 
-    /* broadcast cell for NODE_03 */
-    {&(node_ids[2]), NULL},
+   {&(node_ids[3]), &(node_ids[4])},
+    
+    /* broadcast cell for NODE_01 */
+    {&(node_ids[0]), NULL},
+    /* link from 01 to 02 */
+    {&(node_ids[1]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[1])},
+    /* link from 01 to 04 */
+    {&(node_ids[3]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[3])},
+};
+
+macpong_link_t ssf_cs[SSF_INT_SIZE] = {
+    /* link from 01 to 02 */
+    {&(node_ids[1]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[1])},
+    
+    /* link from 01 to 04 */
+    {&(node_ids[3]), &(node_ids[0])},
+    {&(node_ids[0]), &(node_ids[3])},
+
+    /* link from 02 to 03 */
+    {&(node_ids[2]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[2])},
+    /* link from 02 to 04 */
+    {&(node_ids[3]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[3])},
     /* link from 02 to 05 */
+    {&(node_ids[4]), &(node_ids[1])},
+    {&(node_ids[1]), &(node_ids[4])},
+   
+    /* link from 03 to 05 */
     {&(node_ids[4]), &(node_ids[2])},
     {&(node_ids[2]), &(node_ids[4])},
-
-    /* broadcast cell for NODE_04 */
-    {&(node_ids[3]), NULL},
+    
     /* link from 04 to 05 */
     {&(node_ids[4]), &(node_ids[3])},
     {&(node_ids[3]), &(node_ids[4])},
-    
-    /* broadcast cell for NODE_05 */
-    {&(node_ids[4]), NULL},
-};
+ };
 
 #define RRT_SIZE        (6)
 macpong_routing_entry_t routing_table[RRT_SIZE] = {
@@ -251,23 +286,23 @@ int mote_main(void) {
        neighbors_vars.myDAGrank = 44;
    }
    /* iterate over the full schedule and make my reservations*/
-   for (int i = 0; i < SCHEDULE_SIZE; i++) {
+   for (int i = 0; i < SSF_INT_SIZE; i++) {
        /*  if I am the sender... */
-       if (memcmp(myId, mySchedule[i].sender, sizeof(open_addr_t)) == 0) {
+       if (memcmp(myId, ssf_int[i].sender, sizeof(open_addr_t)) == 0) {
            /* without a particular receiver, schedule a shared cell */
-           if (mySchedule[i].receiver == NULL) {
+           if (ssf_int[i].receiver == NULL) {
                macpong_addToFixedSchedule(NULL, -1, -1, i+NUMSERIALRX);
            }
            /* or for this particular receiver */
            else {
-               macpong_addToFixedSchedule(mySchedule[i].receiver, -1, i+NUMSERIALRX, -1);
+               macpong_addToFixedSchedule(ssf_int[i].receiver, -1, i+NUMSERIALRX, -1);
            }
        }
        /* if I am the receiver or another node has shared cell, schedule an RX cell */
-       else if ((memcmp(myId, mySchedule[i].receiver, sizeof(open_addr_t)) == 0) ||
-               (mySchedule[i].receiver == NULL)) {
+       else if ((memcmp(myId, ssf_int[i].receiver, sizeof(open_addr_t)) == 0) ||
+               (ssf_int[i].receiver == NULL)) {
            {
-               macpong_addToFixedSchedule(mySchedule[i].sender, i+NUMSERIALRX, -1, -1);
+               macpong_addToFixedSchedule(ssf_int[i].sender, i+NUMSERIALRX, -1, -1);
            }
        }
    }
@@ -277,8 +312,8 @@ int mote_main(void) {
 }
 
 unsigned _linkIsScheduled(open_addr_t *dst) {
-   for (int i = 0; i < SCHEDULE_SIZE; i++) {
-       if ((memcmp(myId, mySchedule[i].sender, sizeof(open_addr_t)) == 0) && (memcmp(dst, mySchedule[i].receiver, sizeof(open_addr_t)) == 0)) {
+   for (int i = 0; i < SSF_INT_SIZE; i++) {
+       if ((memcmp(myId, ssf_int[i].sender, sizeof(open_addr_t)) == 0) && (memcmp(dst, ssf_int[i].receiver, sizeof(open_addr_t)) == 0)) {
            return 1;
        }
    }
