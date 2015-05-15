@@ -430,7 +430,8 @@ void icn_initContent(open_addr_t *lastHop) {
     // send interest packet
     packetfunctions_reserveHeaderSize(pkt, sizeof(icn_hdr_t) + strlen(content) + 1);
     ((icn_hdr_t*)pkt->payload)->type = ICN_CONTENT;
-    memcpy((pkt->payload + sizeof(icn_hdr_t)), content, strlen(content) + 1);
+    pkt->payload[1] = send_counter++;
+    memcpy((pkt->payload + 1 + sizeof(icn_hdr_t)), content, strlen(content) + 1);
 
     icn_send(lastHop, pkt);
 }
