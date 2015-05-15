@@ -19,11 +19,19 @@
 #include "idmanager.h"
 #include "neighbors.h"
 
-#define LEN_PAYLOAD 100
+char *interest = "/ndn/RIOT/sensor";
+
+char *content = "Go! are you ready? \
+                 Start the riot! start the riot! start the riot! start the riot now!";
 
 extern neighbors_vars_t neighbors_vars;
 
 //=========================== variables =======================================
+
+typedef enum {
+    ICN_INTEREST    = 1,
+    ICN_CONTENT     = 2,
+} icn_packet_type_t;
 
 typedef struct {
    opentimer_id_t  timerId;
@@ -40,22 +48,32 @@ typedef struct {
     open_addr_t *nextHop;
 } macpong_routing_entry_t;
 
+typedef struct {
+    icn_packet_type_t type;
+} icn_hdr_t;
+
 macpong_vars_t macpong_vars;
 
 open_addr_t *myId;
+
+open_addr_t pit_entry = { .type = ADDR_NONE};
 
 unsigned slot0isActive = 1;
 uint16_t send_counter = 0;
 
 //=========================== prototypes ======================================
 
-void macpong_initSend(opentimer_id_t id);
-void macpong_send(uint8_t payloadCtr, open_addr_t *dst);
+void macpong_initInterest(opentimer_id_t id);
+void macpong_send(open_addr_t *dst, OpenQueueEntry_t *pkt);
 void macpong_addToFixedSchedule(open_addr_t *addr, int16_t rx_cell, int16_t tx_cell, int16_t shared);
 unsigned _linkIsScheduled(open_addr_t *dst);
 open_addr_t* _routeLookup(open_addr_t *dst);
 
 //=========================== initialization ==================================
+
+#define CONTENT_STORE   (&node_ids[0])
+#define HAS_CONTENT     (memcmp(myId, CONTENT_STORE, sizeof(open_addr_t)) == 0)
+#define WANT_CONTENT    (memcmp(myId, &(node_ids[2]), sizeof(open_addr_t)) == 0)
 
 #ifdef SIMU
 #warning SIMULATION build
@@ -110,7 +128,7 @@ macpong_link_t  ssf_int[SSF_INT_SIZE] = {
     /* link from 04 to 05 */
     {&(node_ids[4]), &(node_ids[3])},
     {&(node_ids[3]), &(node_ids[4])},
-    
+
     /* broadcast cell for NODE_05 */
     {&(node_ids[4]), NULL},
 };
@@ -185,7 +203,7 @@ macpong_link_t ssf_int[SSF_INT_SIZE] = {
     {&(node_ids[3]), NULL},
     /* link from 04 to 05 */
     {&(node_ids[4]), &(node_ids[3])},
- 
+
     /* broadcast cell for NODE_03 */
     {&(node_ids[2]), NULL},
     /* link from 02 to 05 */
@@ -205,7 +223,7 @@ macpong_link_t ssf_int[SSF_INT_SIZE] = {
     {&(node_ids[1]), &(node_ids[4])},
 
    {&(node_ids[3]), &(node_ids[4])},
-    
+
     /* broadcast cell for NODE_01 */
     {&(node_ids[0]), NULL},
     /* link from 01 to 02 */
@@ -228,7 +246,7 @@ macpong_link_t ssf_cs[SSF_INT_SIZE] = {
     {&(node_ids[0]), &(node_ids[1])},
     {&(node_ids[1]), &(node_ids[0])},
     {&(node_ids[0]), &(node_ids[1])},
-    
+
     /* link from 01 to 04 */
     {&(node_ids[3]), &(node_ids[0])},
     {&(node_ids[0]), &(node_ids[3])},
@@ -242,11 +260,11 @@ macpong_link_t ssf_cs[SSF_INT_SIZE] = {
     /* link from 02 to 05 */
     {&(node_ids[4]), &(node_ids[1])},
     {&(node_ids[1]), &(node_ids[4])},
-   
+
     /* link from 03 to 05 */
     {&(node_ids[4]), &(node_ids[2])},
     {&(node_ids[2]), &(node_ids[4])},
-    
+
     /* link from 04 to 05 */
     {&(node_ids[4]), &(node_ids[3])},
     {&(node_ids[3]), &(node_ids[4])},
@@ -346,7 +364,7 @@ void macpong_addToFixedSchedule(open_addr_t *addr, int16_t rx_cell, int16_t tx_c
                 CELLTYPE_TX,
                 FALSE,
                 SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET,
-                addr 
+                addr
                 );
     }
     if (rx_cell >= 0) {
@@ -357,7 +375,7 @@ void macpong_addToFixedSchedule(open_addr_t *addr, int16_t rx_cell, int16_t tx_c
                 CELLTYPE_RX,
                 FALSE,
                 SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET,
-                addr 
+                addr
                 );
     }
     if (shared >= 0) {
@@ -373,48 +391,51 @@ void macpong_addToFixedSchedule(open_addr_t *addr, int16_t rx_cell, int16_t tx_c
     }
 }
 
-void macpong_initSend(opentimer_id_t id) {
-    if (idmanager_getIsDAGroot()==TRUE) {
-        return;
-    }
+void macpong_initInterest(opentimer_id_t id) {
+    if ((ieee154e_isSynch()==TRUE && neighbors_getNumNeighbors()>=1) &&
+            WANT_CONTENT) {
 
-   if (ieee154e_isSynch()==TRUE && neighbors_getNumNeighbors()>=1) {
-       // send packet to root
-       openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
-               send_counter, (errorparameter_t) node_ids[0].addr_64b[7]);
-       macpong_send(send_counter++, &node_ids[0]);
-       if (slot0isActive) {
-           /*  remove default slot  */
-           open_addr_t tmp;
-           memset(&tmp,0,sizeof(open_addr_t));
-           tmp.type             = ADDR_ANYCAST;
-           schedule_removeActiveSlot(0, &tmp);
-           slot0isActive = 0;
-           macpong_addToFixedSchedule(&(node_ids[0]), 0, -1, -1);
-       }
-   }
-   else {
-       if (!slot0isActive) {
-           macpong_addToFixedSchedule(&(node_ids[0]), -1, -1, 0);
-           slot0isActive = 1;
-       }
-   }
+        /* create packet */
+        OpenQueueEntry_t* pkt;
+        pkt = openqueue_getFreePacketBuffer(COMPONENT_ICN);
+        if (pkt==NULL) {
+            openserial_printError(COMPONENT_ICN, ERR_NO_FREE_PACKET_BUFFER,
+                    (errorparameter_t)0, (errorparameter_t)0);
+            return;
+        }
+
+        pkt->creator                   = COMPONENT_ICN;
+        pkt->owner                     = COMPONENT_ICN;
+        pkt->l2_nextORpreviousHop.type = ADDR_64B;
+
+        // send interest packet
+        openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
+                send_counter, (errorparameter_t) node_ids[0].addr_64b[7]);
+        packetfunctions_reserveHeaderSize(pkt, sizeof(icn_hdr_t) + strlen(interest) + 1);
+        ((icn_hdr_t*)pkt->payload)->type = ICN_INTEREST;
+        memcpy((pkt->payload + sizeof(icn_hdr_t)), interest, strlen(interest) + 1);
+
+        macpong_send(CONTENT_STORE, pkt);
+
+        if (!idmanager_getIsDAGroot() && slot0isActive) {
+            /*  remove default slot  */
+            open_addr_t tmp;
+            memset(&tmp,0,sizeof(open_addr_t));
+            tmp.type             = ADDR_ANYCAST;
+            schedule_removeActiveSlot(0, &tmp);
+            slot0isActive = 0;
+            macpong_addToFixedSchedule(&(node_ids[0]), 0, -1, -1);
+        }
+    }
+    else {
+        if (!slot0isActive) {
+            macpong_addToFixedSchedule(&(node_ids[0]), -1, -1, 0);
+            slot0isActive = 1;
+        }
+    }
 }
 
-void macpong_send(uint8_t payloadCtr, open_addr_t *dst) {
-    OpenQueueEntry_t* pkt;
-    uint8_t i;
-
-    pkt = openqueue_getFreePacketBuffer(COMPONENT_ICN);
-    if (pkt==NULL) {
-        openserial_printError(COMPONENT_ICN, ERR_NO_FREE_PACKET_BUFFER,
-                (errorparameter_t)0, (errorparameter_t)0);
-        return;
-    }
-    pkt->creator                   = COMPONENT_ICN;
-    pkt->owner                     = COMPONENT_ICN;
-    pkt->l2_nextORpreviousHop.type = ADDR_64B;
-    
+void macpong_send(open_addr_t *dst, OpenQueueEntry_t *pkt) {
     /* find next hop */
     if (!_linkIsScheduled(dst)) {
         open_addr_t *tmp;
@@ -431,12 +452,6 @@ void macpong_send(uint8_t payloadCtr, open_addr_t *dst) {
 
     memcpy(&pkt->l2_nextORpreviousHop, dst, sizeof(open_addr_t));
 
-
-    packetfunctions_reserveHeaderSize(pkt,LEN_PAYLOAD);
-    ((uint8_t*)pkt->payload)[0]    = payloadCtr;
-    for (i=1;i<LEN_PAYLOAD;i++){
-        ((uint8_t*)pkt->payload)[i]  = i;
-    }
     sixtop_send(pkt);
 }
 
@@ -448,7 +463,7 @@ void iphc_init(void) {
     macpong_vars.timerId    = opentimers_start(
             5000,
             TIMER_PERIODIC,TIME_MS,
-            macpong_initSend
+            macpong_initInterest
             );
 }
 
@@ -460,13 +475,14 @@ void iphc_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
 
 void iphc_receive(OpenQueueEntry_t* msg) {
     msg->owner = COMPONENT_ICN;
-    if (idmanager_getIsDAGroot()==TRUE) {
+    if (HAS_CONTENT) {
         openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
                 (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
                 (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
         openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV2,
                 (errorparameter_t) msg->payload[0],
                 (errorparameter_t) msg->payload[1]);
+        openqueue_freePacketBuffer(msg);
     }
     else {
         /*
@@ -477,9 +493,33 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                 (errorparameter_t) node_ids[0].addr_64b[6],
                 (errorparameter_t) node_ids[0].addr_64b[7]);
         */
-        macpong_send(++msg->payload[0], &(node_ids[0]));
+        icn_hdr_t *icn_pkt = (icn_hdr_t*) msg->payload;
+        if (icn_pkt->type == ICN_INTEREST) {
+            memcpy(&pit_entry, &msg->l2_nextORpreviousHop, sizeof(open_addr_t));
+            /* forward to CS node */
+            msg->creator = COMPONENT_ICN;
+            macpong_send(CONTENT_STORE, msg);
+        }
+        else if (icn_pkt->type == ICN_CONTENT) {
+            if (pit_entry.type != ADDR_NONE) {
+                msg->creator = COMPONENT_ICN;
+                macpong_send(&pit_entry, msg);
+                pit_entry.type = ADDR_NONE;
+            }
+            else {
+                openserial_printError(COMPONENT_ICN, ERR_ICN_FWD_NOT_FOUND,
+                        (errorparameter_t) 47,
+                        (errorparameter_t) 11);
+                openqueue_freePacketBuffer(msg);
+            }
+        }
+        else {
+            openserial_printError(COMPONENT_ICN, ERR_MSG_UNKNOWN_TYPE,
+                    (errorparameter_t) icn_pkt->type,
+                    (errorparameter_t) icn_pkt->type);
+            openqueue_freePacketBuffer(msg);
+        }
     }
-    openqueue_freePacketBuffer(msg);
 }
 
 //===== L3
