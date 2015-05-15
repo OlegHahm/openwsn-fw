@@ -71,9 +71,11 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 
 //=========================== initialization ==================================
 
+#define ADDR_LEN_64B    (sizeof(uint8_t) + 8)
+
 #define CONTENT_STORE   (&node_ids[0])
-#define HAS_CONTENT     (memcmp(myId, CONTENT_STORE, sizeof(open_addr_t)) == 0)
-#define WANT_CONTENT    (memcmp(myId, &(node_ids[2]), sizeof(open_addr_t)) == 0)
+#define HAS_CONTENT     (memcmp(myId, CONTENT_STORE, ADDR_LEN_64B) == 0)
+#define WANT_CONTENT    (memcmp(myId, &(node_ids[2]), ADDR_LEN_64B) == 0)
 
 #ifdef SIMU
 #warning SIMULATION build
@@ -297,7 +299,7 @@ int mote_main(void) {
    myId = idmanager_getMyID(ADDR_64B);
 
    /* check for root node */
-   if (memcmp(myId, &(node_ids[0]), sizeof(open_addr_t)) == 0) {
+   if (memcmp(myId, &(node_ids[0]), ADDR_LEN_64B) == 0) {
        idmanager_setIsDAGroot(TRUE);
    }
    else {
@@ -306,7 +308,7 @@ int mote_main(void) {
    /* iterate over the full schedule and make my reservations*/
    for (int i = 0; i < SSF_INT_SIZE; i++) {
        /*  if I am the sender... */
-       if (memcmp(myId, ssf_int[i].sender, sizeof(open_addr_t)) == 0) {
+       if (memcmp(myId, ssf_int[i].sender, ADDR_LEN_64B) == 0) {
            /* without a particular receiver, schedule a shared cell */
            if (ssf_int[i].receiver == NULL) {
                icn_addToFixedSchedule(NULL, -1, -1, i+NUMSERIALRX);
@@ -317,7 +319,7 @@ int mote_main(void) {
            }
        }
        /* if I am the receiver or another node has shared cell, schedule an RX cell */
-       else if ((memcmp(myId, ssf_int[i].receiver, sizeof(open_addr_t)) == 0) ||
+       else if ((memcmp(myId, ssf_int[i].receiver, ADDR_LEN_64B) == 0) ||
                (ssf_int[i].receiver == NULL)) {
            {
                icn_addToFixedSchedule(ssf_int[i].sender, i+NUMSERIALRX, -1, -1);
@@ -331,7 +333,8 @@ int mote_main(void) {
 
 unsigned _linkIsScheduled(open_addr_t *dst) {
    for (int i = 0; i < SSF_INT_SIZE; i++) {
-       if ((memcmp(myId, ssf_int[i].sender, sizeof(open_addr_t)) == 0) && (memcmp(dst, ssf_int[i].receiver, sizeof(open_addr_t)) == 0)) {
+       if ((memcmp(myId, ssf_int[i].sender, ADDR_LEN_64B) == 0) && 
+               (memcmp(dst, ssf_int[i].receiver, ADDR_LEN_64B) == 0)) {
            return 1;
        }
    }
@@ -343,9 +346,9 @@ open_addr_t* _routeLookup(open_addr_t *dst) {
     /* iterate over routing table  */
    for (int i = 0; i < RRT_SIZE; i++) {
        /* find entries for this node */
-       if (memcmp(myId, routing_table[i].id, sizeof(open_addr_t)) == 0) {
+       if (memcmp(myId, routing_table[i].id, ADDR_LEN_64B) == 0) {
            /* dedicated route found, use it */
-           if (memcmp(dst, routing_table[i].dst, sizeof(open_addr_t)) == 0) {
+           if (memcmp(dst, routing_table[i].dst, ADDR_LEN_64B) == 0) {
                return routing_table[i].nextHop;
            }
            /* default route found, remember */
@@ -426,7 +429,7 @@ void icn_initInterest(opentimer_id_t id) {
     if (!idmanager_getIsDAGroot() && slot0isActive) {
         /*  remove default slot  */
         open_addr_t tmp;
-        memset(&tmp,0,sizeof(open_addr_t));
+        memset(&tmp,0,ADDR_LEN_64B);
         tmp.type             = ADDR_ANYCAST;
         schedule_removeActiveSlot(0, &tmp);
         slot0isActive = 0;
@@ -449,7 +452,7 @@ void icn_send(open_addr_t *dst, OpenQueueEntry_t *pkt) {
         dst = tmp;
     }
 
-    memcpy(&pkt->l2_nextORpreviousHop, dst, sizeof(open_addr_t));
+    memcpy(&pkt->l2_nextORpreviousHop, dst, ADDR_LEN_64B);
 
     sixtop_send(pkt);
 }
