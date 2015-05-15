@@ -220,7 +220,7 @@ enum {
    ERR_UNEXPECTED_SENDDONE             = 0x2b, // sendDone for packet I didn't send
    ERR_NO_FREE_PACKET_BUFFER           = 0x2c, // no free packet buffer (code location {0})
    ERR_FREEING_UNUSED                  = 0x2d, // freeing unused memory
-   ERR_FREEING_ERROR                   = 0x2e, // freeing memory unsupported memory
+   ERR_FREEING_ERROR                   = 0x2e, // freeing memory unsupported memory for slot {0}
    ERR_UNSUPPORTED_COMMAND             = 0x2f, // unsupported command {0}
    ERR_MSG_UNKNOWN_TYPE                = 0x30, // unknown message type {0}
    ERR_WRONG_ADDR_TYPE                 = 0x31, // wrong address type {0} (code location {1})
