@@ -392,9 +392,14 @@ void macpong_addToFixedSchedule(open_addr_t *addr, int16_t rx_cell, int16_t tx_c
 }
 
 void macpong_initInterest(opentimer_id_t id) {
-    if ((ieee154e_isSynch()==TRUE && neighbors_getNumNeighbors()>=1) &&
-            WANT_CONTENT) {
-
+    if (!ieee154e_isSynch()) {
+        if (!slot0isActive) {
+            macpong_addToFixedSchedule(&(node_ids[0]), -1, -1, 0);
+            slot0isActive = 1;
+        }
+        return;
+    }
+    if ((neighbors_getNumNeighbors()>=1) && WANT_CONTENT) {
         /* create packet */
         OpenQueueEntry_t* pkt;
         pkt = openqueue_getFreePacketBuffer(COMPONENT_ICN);
@@ -416,22 +421,16 @@ void macpong_initInterest(opentimer_id_t id) {
         memcpy((pkt->payload + sizeof(icn_hdr_t)), interest, strlen(interest) + 1);
 
         macpong_send(CONTENT_STORE, pkt);
-
-        if (!idmanager_getIsDAGroot() && slot0isActive) {
-            /*  remove default slot  */
-            open_addr_t tmp;
-            memset(&tmp,0,sizeof(open_addr_t));
-            tmp.type             = ADDR_ANYCAST;
-            schedule_removeActiveSlot(0, &tmp);
-            slot0isActive = 0;
-            macpong_addToFixedSchedule(&(node_ids[0]), 0, -1, -1);
-        }
     }
-    else {
-        if (!slot0isActive) {
-            macpong_addToFixedSchedule(&(node_ids[0]), -1, -1, 0);
-            slot0isActive = 1;
-        }
+
+    if (!idmanager_getIsDAGroot() && slot0isActive) {
+        /*  remove default slot  */
+        open_addr_t tmp;
+        memset(&tmp,0,sizeof(open_addr_t));
+        tmp.type             = ADDR_ANYCAST;
+        schedule_removeActiveSlot(0, &tmp);
+        slot0isActive = 0;
+        macpong_addToFixedSchedule(&(node_ids[0]), 0, -1, -1);
     }
 }
 
