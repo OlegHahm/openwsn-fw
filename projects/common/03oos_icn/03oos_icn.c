@@ -21,8 +21,7 @@
 
 char *interest = "/ndn/RIOT/sensor";
 
-char *content = "Go! are you ready? \
-                 Start the riot! start the riot! start the riot! start the riot now!";
+char *content = "Go! are you ready? Start the riot!";
 
 extern neighbors_vars_t neighbors_vars;
 
@@ -63,6 +62,7 @@ uint16_t send_counter = 0;
 
 //=========================== prototypes ======================================
 
+void icn_initContent(open_addr_t *lastHop);
 void icn_initInterest(opentimer_id_t id);
 void icn_send(open_addr_t *dst, OpenQueueEntry_t *pkt);
 void icn_addToFixedSchedule(open_addr_t *addr, int16_t rx_cell, int16_t tx_cell, int16_t shared);
@@ -332,8 +332,27 @@ int mote_main(void) {
 }
 
 unsigned _linkIsScheduled(open_addr_t *dst) {
+#if 0
+   if (memcmp(myId, &(node_ids[0]), ADDR_LEN_64B) == 0) {
+       openserial_printError(COMPONENT_ICN, ERR_DEBUG4,
+               (errorparameter_t) 44, dst->type);
+       openserial_printError(COMPONENT_ICN, ERR_DEBUG4,
+               (errorparameter_t) dst->addr_64b[0],
+               (errorparameter_t) dst->addr_64b[1]);
+       openserial_printError(COMPONENT_ICN, ERR_DEBUG4,
+               (errorparameter_t) dst->addr_64b[2],
+               (errorparameter_t) dst->addr_64b[3]);
+       openserial_printError(COMPONENT_ICN, ERR_DEBUG4,
+               (errorparameter_t) dst->addr_64b[4],
+               (errorparameter_t) dst->addr_64b[5]);
+       openserial_printError(COMPONENT_ICN, ERR_DEBUG4,
+               (errorparameter_t) dst->addr_64b[6],
+               (errorparameter_t) dst->addr_64b[7]);
+   }
+#endif
+
    for (int i = 0; i < SSF_INT_SIZE; i++) {
-       if ((memcmp(myId, ssf_int[i].sender, ADDR_LEN_64B) == 0) && 
+       if ((memcmp(myId, ssf_int[i].sender, ADDR_LEN_64B) == 0) &&
                (memcmp(dst, ssf_int[i].receiver, ADDR_LEN_64B) == 0)) {
            return 1;
        }
@@ -392,6 +411,28 @@ void icn_addToFixedSchedule(open_addr_t *addr, int16_t rx_cell, int16_t tx_cell,
                 &temp_neighbor
                 );
     }
+}
+
+void icn_initContent(open_addr_t *lastHop) {
+    /* create packet */
+    OpenQueueEntry_t* pkt;
+    pkt = openqueue_getFreePacketBuffer(COMPONENT_ICN);
+    if (pkt==NULL) {
+        openserial_printError(COMPONENT_ICN, ERR_NO_FREE_PACKET_BUFFER,
+                (errorparameter_t)0, (errorparameter_t)0);
+        return;
+    }
+
+    pkt->creator                   = COMPONENT_ICN;
+    pkt->owner                     = COMPONENT_ICN;
+    pkt->l2_nextORpreviousHop.type = ADDR_64B;
+
+    // send interest packet
+    packetfunctions_reserveHeaderSize(pkt, sizeof(icn_hdr_t) + strlen(content) + 1);
+    ((icn_hdr_t*)pkt->payload)->type = ICN_CONTENT;
+    memcpy((pkt->payload + sizeof(icn_hdr_t)), content, strlen(content) + 1);
+
+    icn_send(lastHop, pkt);
 }
 
 void icn_initInterest(opentimer_id_t id) {
@@ -477,38 +518,48 @@ void iphc_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
 
 void iphc_receive(OpenQueueEntry_t* msg) {
     msg->owner = COMPONENT_ICN;
-    if (HAS_CONTENT) {
-        openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
-                (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
-                (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
-        openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV2,
-                (errorparameter_t) msg->payload[0],
-                (errorparameter_t) msg->payload[1]);
-            msg->creator = COMPONENT_ICN;
-            icn_send(CONTENT_STORE, msg);
-        openqueue_freePacketBuffer(msg);
-    }
-    else {
-        /*
-        openserial_printInfo(COMPONENT_ICN, ERR_ICN_FWD1,
-                (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
-                (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
-        openserial_printInfo(COMPONENT_ICN, ERR_ICN_FWD2,
-                (errorparameter_t) node_ids[0].addr_64b[6],
-                (errorparameter_t) node_ids[0].addr_64b[7]);
-        */
-        icn_hdr_t *icn_pkt = (icn_hdr_t*) msg->payload;
-        if (icn_pkt->type == ICN_INTEREST) {
-            memcpy(&pit_entry, &msg->l2_nextORpreviousHop, sizeof(open_addr_t));
-            /* forward to CS node */
-            msg->creator = COMPONENT_ICN;
-            icn_send(CONTENT_STORE, msg);
-        }
-        else if (icn_pkt->type == ICN_CONTENT) {
+    icn_hdr_t *icn_pkt = (icn_hdr_t*) msg->payload;
+    switch (icn_pkt->type) {
+        case ICN_INTEREST:
+            if (HAS_CONTENT) {
+                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
+                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
+                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_INT,
+                        (errorparameter_t) msg->payload[1],
+                        (errorparameter_t) msg->payload[2]);
+                icn_initContent(&(msg->l2_nextORpreviousHop));
+                openqueue_freePacketBuffer(msg);
+            }
+            else {
+                /*
+                openserial_printInfo(COMPONENT_ICN, ERR_ICN_FWD1,
+                   (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
+                   (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+                openserial_printInfo(COMPONENT_ICN, ERR_ICN_FWD2,
+                   (errorparameter_t) node_ids[0].addr_64b[6],
+                   (errorparameter_t) node_ids[0].addr_64b[7]);
+                   */
+                memcpy(&pit_entry, &msg->l2_nextORpreviousHop, ADDR_LEN_64B);
+                /* forward to CS node */
+                msg->creator = COMPONENT_ICN;
+                icn_send(CONTENT_STORE, msg);
+            }
+            break;
+        case ICN_CONTENT:
             if (pit_entry.type != ADDR_NONE) {
                 msg->creator = COMPONENT_ICN;
                 icn_send(&pit_entry, msg);
                 pit_entry.type = ADDR_NONE;
+            }
+            else if (WANT_CONTENT) {
+                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
+                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
+                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_CONT,
+                        (errorparameter_t) msg->payload[1],
+                        (errorparameter_t) msg->payload[2]);
+                openqueue_freePacketBuffer(msg);
             }
             else {
                 openserial_printError(COMPONENT_ICN, ERR_ICN_FWD_NOT_FOUND,
@@ -516,13 +567,12 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                         (errorparameter_t) 11);
                 openqueue_freePacketBuffer(msg);
             }
-        }
-        else {
+            break;
+        default:
             openserial_printError(COMPONENT_ICN, ERR_MSG_UNKNOWN_TYPE,
                     (errorparameter_t) icn_pkt->type,
                     (errorparameter_t) icn_pkt->type);
             openqueue_freePacketBuffer(msg);
-        }
     }
 }
 
