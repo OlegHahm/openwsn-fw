@@ -239,11 +239,12 @@ enum {
    ERR_ICN_FWD2                        = 0x3e, // forwarding to {0}-{1}
    ERR_ICN_FWD_NOT_FOUND               = 0x3f, // cannot forward to {0}-{1}, no route found
    ERR_ICN_RECV1                       = 0x40, // ICN receiving from {0}-{1}
-   ERR_ICN_RECV2                       = 0x41, // ICN receiving: payload {0}, {1}
-   ERR_DEBUG1                          = 0x42, // DEBUG1: {0} {1}
-   ERR_DEBUG2                          = 0x43, // DEBUG2: {0} {1}
-   ERR_DEBUG3                          = 0x44, // DEBUG3: {0} {1}
-   ERR_DEBUG4                          = 0x45, // DEBUG4: {0} {1}
+   ERR_ICN_RECV_INT                    = 0x41, // ICN interest received: payload {0}, {1}
+   ERR_ICN_RECV_CONT                   = 0x42, // ICN content received: payload {0}, {1}
+   ERR_DEBUG1                          = 0x44, // DEBUG1: {0} {1}
+   ERR_DEBUG2                          = 0x44, // DEBUG2: {0} {1}
+   ERR_DEBUG3                          = 0x45, // DEBUG3: {0} {1}
+   ERR_DEBUG4                          = 0x46, // DEBUG4: {0} {1}
 };
 
 //=========================== typedef =========================================
