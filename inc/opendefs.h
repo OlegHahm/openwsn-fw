@@ -239,8 +239,8 @@ enum {
    ERR_ICN_FWD2                        = 0x3e, // forwarding to {0}-{1}
    ERR_ICN_FWD_NOT_FOUND               = 0x3f, // cannot forward to {0}-{1}, no route found
    ERR_ICN_RECV1                       = 0x40, // ICN receiving from {0}-{1}
-   ERR_ICN_RECV_INT                    = 0x41, // ICN interest received: payload {0}, {1}
-   ERR_ICN_RECV_CONT                   = 0x42, // ICN content received: payload {0}, {1}
+   ERR_ICN_RECV_INT                    = 0x41, // ICN interest received with sequence number {0}
+   ERR_ICN_RECV_CONT                   = 0x42, // ICN content received with sequence number {0}, latest interest is {1}
    ERR_DEBUG1                          = 0x44, // DEBUG1: {0} {1}
    ERR_DEBUG2                          = 0x44, // DEBUG2: {0} {1}
    ERR_DEBUG3                          = 0x45, // DEBUG3: {0} {1}
