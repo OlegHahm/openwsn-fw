@@ -49,6 +49,7 @@ typedef struct {
 
 typedef struct {
     icn_packet_type_t type;
+    uint16_t seq;
 } icn_hdr_t;
 
 icn_vars_t icn_vars;
@@ -56,6 +57,7 @@ icn_vars_t icn_vars;
 open_addr_t *myId;
 
 open_addr_t pit_entry = { .type = ADDR_NONE};
+unsigned pit_ctr = 0;
 
 unsigned slot0isActive = 1;
 uint16_t send_counter = 0;
@@ -577,8 +579,8 @@ void icn_initContent(open_addr_t *lastHop) {
     // send interest packet
     packetfunctions_reserveHeaderSize(pkt, sizeof(icn_hdr_t) + strlen(content) + 1);
     ((icn_hdr_t*)pkt->payload)->type = ICN_CONTENT;
-    pkt->payload[1] = send_counter++;
-    memcpy((pkt->payload + 1 + sizeof(icn_hdr_t)), content, strlen(content) + 1);
+    ((icn_hdr_t*)pkt->payload)->seq = send_counter;
+    memcpy((pkt->payload + sizeof(icn_hdr_t)), content, strlen(content) + 1);
 
     icn_send(lastHop, pkt);
 }
@@ -619,6 +621,7 @@ void icn_initInterest(opentimer_id_t id) {
                 send_counter, (errorparameter_t) node_ids[0].addr_64b[7]);
         packetfunctions_reserveHeaderSize(pkt, sizeof(icn_hdr_t) + strlen(interest) + 1);
         ((icn_hdr_t*)pkt->payload)->type = ICN_INTEREST;
+        ((icn_hdr_t*)pkt->payload)->seq = send_counter++;
         memcpy((pkt->payload + sizeof(icn_hdr_t)), interest, strlen(interest) + 1);
 
         icn_send(CONTENT_STORE, pkt);
@@ -690,8 +693,9 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                         (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
                         (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_INT,
-                        (errorparameter_t) msg->payload[1],
-                        (errorparameter_t) msg->payload[2]);
+                        (errorparameter_t) icn_pkt->seq,
+                        0);
+                send_counter = icn_pkt->seq;
                 icn_initContent(&(msg->l2_nextORpreviousHop));
 #if ADAPTIVE_SCHEDULE
                 if (csSlotsActive) {
@@ -711,6 +715,7 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                    (errorparameter_t) node_ids[0].addr_64b[7]);
                    */
                 memcpy(&pit_entry, &msg->l2_nextORpreviousHop, ADDR_LEN_64B);
+                pit_ctr++;
 
 #if ADAPTIVE_SCHEDULE
                 /* make reservations in CS */
@@ -741,15 +746,18 @@ void iphc_receive(OpenQueueEntry_t* msg) {
 #endif
                 msg->creator = COMPONENT_ICN;
                 icn_send(&pit_entry, msg);
-                pit_entry.type = ADDR_NONE;
+                if (--pit_ctr <= 0) {
+                    pit_entry.type = ADDR_NONE;
+                    pit_ctr = 0;
+                }
             }
             else if (WANT_CONTENT) {
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
                         (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
                         (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_CONT,
-                        (errorparameter_t) msg->payload[1],
-                        (errorparameter_t) msg->payload[2]);
+                        (errorparameter_t) icn_pkt->seq,
+                        (errorparameter_t) send_counter);
 #if ADAPTIVE_SCHEDULE
                 if (csSlotsActive) {
                     icn_removeRXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
