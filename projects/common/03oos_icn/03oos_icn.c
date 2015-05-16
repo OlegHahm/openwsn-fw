@@ -81,6 +81,7 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 //=========================== initialization ==================================
 
 #define ADAPTIVE_SCHEDULE   (0)
+#define TIMED_SENDING       (0)
 
 #define NUMBER_OF_CHUNKS    (100)
 #define ADDR_LEN_64B    (sizeof(uint8_t) + 8)
@@ -627,9 +628,13 @@ void icn_initInterest(opentimer_id_t id) {
         memcpy((pkt->payload + sizeof(icn_hdr_t)), interest, strlen(interest) + 1);
 
         icn_send(CONTENT_STORE, pkt);
+#if (TIMED_SENDING == 0)
+            opentimers_stop(icn_vars.timerId);
+#else
         if (receive_counter >= NUMBER_OF_CHUNKS) { 
             opentimers_stop(icn_vars.timerId);
         }
+#endif
     }
 
     if (!idmanager_getIsDAGroot() && slot0isActive) {
@@ -771,6 +776,11 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                 }
 #endif
                 openqueue_freePacketBuffer(msg);
+#if (TIMED_SENDING == 0)
+                if (receive_counter < NUMBER_OF_CHUNKS) { 
+                    icn_initInterest(0);
+                }
+#endif
             }
             else {
                 openserial_printError(COMPONENT_ICN, ERR_ICN_FWD_NOT_FOUND,
