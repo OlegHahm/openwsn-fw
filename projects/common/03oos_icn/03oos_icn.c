@@ -61,6 +61,7 @@ unsigned pit_ctr = 0;
 
 unsigned slot0isActive = 1;
 uint16_t send_counter = 0;
+uint16_t receive_counter = 0;
 unsigned csSlotsActive = 0;
 
 //=========================== prototypes ======================================
@@ -81,6 +82,7 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 
 #define ADAPTIVE_SCHEDULE   (0)
 
+#define NUMBER_OF_CHUNKS    (100)
 #define ADDR_LEN_64B    (sizeof(uint8_t) + 8)
 
 #define CONTENT_STORE   (&node_ids[0])
@@ -625,6 +627,9 @@ void icn_initInterest(opentimer_id_t id) {
         memcpy((pkt->payload + sizeof(icn_hdr_t)), interest, strlen(interest) + 1);
 
         icn_send(CONTENT_STORE, pkt);
+        if (receive_counter >= NUMBER_OF_CHUNKS) { 
+            opentimers_stop(icn_vars.timerId);
+        }
     }
 
     if (!idmanager_getIsDAGroot() && slot0isActive) {
@@ -758,6 +763,7 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_CONT,
                         (errorparameter_t) icn_pkt->seq,
                         (errorparameter_t) send_counter);
+                receive_counter = icn_pkt->seq;
 #if ADAPTIVE_SCHEDULE
                 if (csSlotsActive) {
                     icn_removeRXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
