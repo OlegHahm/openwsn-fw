@@ -82,6 +82,7 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 
 #define ADAPTIVE_SCHEDULE   (0)
 #define TIMED_SENDING       (0)
+#define INTEREST_INTERVAL   (5000)
 
 #define NUMBER_OF_CHUNKS    (100)
 #define ADDR_LEN_64B    (sizeof(uint8_t) + 8)
@@ -674,7 +675,7 @@ void icn_send(open_addr_t *dst, OpenQueueEntry_t *pkt) {
 
 void iphc_init(void) {
     icn_vars.timerId    = opentimers_start(
-            5000,
+            INTEREST_INTERVAL,
             TIMER_PERIODIC,TIME_MS,
             icn_initInterest
             );
