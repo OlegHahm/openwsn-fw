@@ -699,9 +699,9 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                     icn_makeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
                 }
 #endif
-                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
-                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
-                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+//                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
+//                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
+//                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_INT,
                         (errorparameter_t) icn_pkt->seq,
                         0);
@@ -762,9 +762,9 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                 }
             }
             else if (WANT_CONTENT) {
-                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
-                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
-                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+//                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
+//                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
+//                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_CONT,
                         (errorparameter_t) icn_pkt->seq,
                         (errorparameter_t) send_counter);
