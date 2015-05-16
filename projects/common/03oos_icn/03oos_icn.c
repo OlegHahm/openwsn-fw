@@ -77,6 +77,8 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 
 //=========================== initialization ==================================
 
+#define ADAPTIVE_SCHEDULE   (0)
+
 #define ADDR_LEN_64B    (sizeof(uint8_t) + 8)
 
 #define CONTENT_STORE   (&node_ids[0])
@@ -389,6 +391,9 @@ int mote_main(void) {
    }
 
    icn_makeReservation(ssf_int, SSF_INT_SIZE, SSF_INT_OFFSET);
+#if ADAPTIVE_SCHEDULE == 0
+   icn_makeReservation(ssf_cs, SSF_CS_SIZE, SSF_CS_OFFSET);
+#endif
    scheduler_start();
    return 0; // this line should never be reached
 }
@@ -600,12 +605,14 @@ void icn_initInterest(opentimer_id_t id) {
         pkt->owner                     = COMPONENT_ICN;
         pkt->l2_nextORpreviousHop.type = ADDR_64B;
 
+#if ADAPTIVE_SCHEDULE
         /* make reservation for CS */
         if (!csSlotsActive) {
             csSlotsActive = 1;
             open_addr_t *nextHop = _routeLookup(CONTENT_STORE);
             icn_makeRXReservation(ssf_cs, nextHop, SSF_CS_SIZE, SSF_CS_OFFSET);
         }
+#endif
 
         // send interest packet
         openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND,
@@ -672,11 +679,13 @@ void iphc_receive(OpenQueueEntry_t* msg) {
     switch (icn_pkt->type) {
         case ICN_INTEREST:
             if (HAS_CONTENT) {
+#if ADAPTIVE_SCHEDULE
                 if (!csSlotsActive) {
                     csSlotsActive = 1;
                     /* for next hop, to receive potential content */
                     icn_makeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
                 }
+#endif
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
                         (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
                         (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
@@ -684,10 +693,12 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                         (errorparameter_t) msg->payload[1],
                         (errorparameter_t) msg->payload[2]);
                 icn_initContent(&(msg->l2_nextORpreviousHop));
+#if ADAPTIVE_SCHEDULE
                 if (csSlotsActive) {
                     icn_removeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
                     csSlotsActive = 0;
                 }
+#endif
                 openqueue_freePacketBuffer(msg);
             }
             else {
@@ -701,6 +712,7 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                    */
                 memcpy(&pit_entry, &msg->l2_nextORpreviousHop, ADDR_LEN_64B);
 
+#if ADAPTIVE_SCHEDULE
                 /* make reservations in CS */
                 if (!csSlotsActive) {
                     csSlotsActive = 1;
@@ -711,6 +723,7 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                     /* for previous hop to send back the potential content */
                     icn_makeTXReservation(ssf_cs, &pit_entry, SSF_CS_SIZE, SSF_CS_OFFSET);
                 }
+#endif
 
                 /* forward to CS node */
                 msg->creator = COMPONENT_ICN;
@@ -719,11 +732,13 @@ void iphc_receive(OpenQueueEntry_t* msg) {
             break;
         case ICN_CONTENT:
             if (pit_entry.type != ADDR_NONE) {
+#if ADAPTIVE_SCHEDULE
                 if (csSlotsActive) {
                     icn_removeRXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
                     icn_removeTXReservation(ssf_cs, &pit_entry, SSF_CS_SIZE, SSF_CS_OFFSET);
                     csSlotsActive = 0;
                 }
+#endif
                 msg->creator = COMPONENT_ICN;
                 icn_send(&pit_entry, msg);
                 pit_entry.type = ADDR_NONE;
@@ -735,10 +750,12 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_CONT,
                         (errorparameter_t) msg->payload[1],
                         (errorparameter_t) msg->payload[2]);
+#if ADAPTIVE_SCHEDULE
                 if (csSlotsActive) {
                     icn_removeRXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
                     csSlotsActive = 0;
                 }
+#endif
                 openqueue_freePacketBuffer(msg);
             }
             else {
