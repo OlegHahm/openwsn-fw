@@ -245,6 +245,9 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
 
     /* broadcast cell for NODE_03 */
     {&(node_ids[2]), NULL},
+    /* link from 03 to 10 */
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[2]), &(node_ids[9])}, // 16
     /* link from 03 to 05 */
     {&(node_ids[4]), &(node_ids[2])}, // 9
     {&(node_ids[2]), &(node_ids[4])}, // 10
@@ -254,9 +257,6 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
     /* link from 03 to 09 */
     {&(node_ids[8]), &(node_ids[2])}, // 13
     {&(node_ids[2]), &(node_ids[8])}, // 14
-    /* link from 03 to 10 */
-    {&(node_ids[9]), &(node_ids[2])}, // 15
-    {&(node_ids[2]), &(node_ids[9])}, // 16
 
     /* broadcast cell for NODE_02 */
     {&(node_ids[1]), NULL},
@@ -293,33 +293,18 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
 };
 
 icn_link_t ssf_cs[SSF_INT_SIZE] = {
-    /* link from 08 to 10 */
-    {&(node_ids[9]), &(node_ids[7])}, // 1
-    {&(node_ids[7]), &(node_ids[9])}, // 2
-
-    /* link from 05 to 07 */
-    {&(node_ids[6]), &(node_ids[4])}, // 3
-    {&(node_ids[4]), &(node_ids[6])}, // 4
-
-    /* link from 04 to 05 */
-    {&(node_ids[4]), &(node_ids[3])}, // 5
-    {&(node_ids[3]), &(node_ids[4])}, // 6
-    /* link from 04 to 06 */
-    {&(node_ids[5]), &(node_ids[3])}, // 7
-    {&(node_ids[3]), &(node_ids[5])}, // 8
-
-    /* link from 03 to 05 */
-    {&(node_ids[4]), &(node_ids[2])}, // 9
-    {&(node_ids[2]), &(node_ids[4])}, // 10
-    /* link from 03 to 07 */
-    {&(node_ids[6]), &(node_ids[2])}, // 11
-    {&(node_ids[2]), &(node_ids[6])}, // 12
-    /* link from 03 to 09 */
-    {&(node_ids[8]), &(node_ids[2])}, // 13
-    {&(node_ids[2]), &(node_ids[8])}, // 14
-    /* link from 03 to 10 */
-    {&(node_ids[9]), &(node_ids[2])}, // 15
-    {&(node_ids[2]), &(node_ids[9])}, // 16
+    /* link from 01 to 02 */
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    /* link from 01 to 04 */
+    {&(node_ids[3]), &(node_ids[0])}, // 29
+    {&(node_ids[0]), &(node_ids[3])}, // 30
+    /* link from 01 to 06 */
+    {&(node_ids[5]), &(node_ids[0])}, // 31
+    {&(node_ids[0]), &(node_ids[5])}, // 32
+    /* link from 01 to 07 */
+    {&(node_ids[6]), &(node_ids[0])}, // 33
+    {&(node_ids[0]), &(node_ids[6])}, // 34
 
     /* link from 02 to 03 */
     {&(node_ids[2]), &(node_ids[1])}, // 17
@@ -337,19 +322,34 @@ icn_link_t ssf_cs[SSF_INT_SIZE] = {
     {&(node_ids[6]), &(node_ids[1])}, // 25
     {&(node_ids[1]), &(node_ids[6])}, // 26
 
-    /* link from 01 to 02 */
-    {&(node_ids[1]), &(node_ids[0])}, // 27
-    {&(node_ids[0]), &(node_ids[1])}, // 28
-    /* link from 01 to 04 */
-    {&(node_ids[3]), &(node_ids[0])}, // 29
-    {&(node_ids[0]), &(node_ids[3])}, // 30
-    /* link from 01 to 06 */
-    {&(node_ids[5]), &(node_ids[0])}, // 31
-    {&(node_ids[0]), &(node_ids[5])}, // 32
-    /* link from 01 to 07 */
-    {&(node_ids[6]), &(node_ids[0])}, // 33
-    {&(node_ids[0]), &(node_ids[6])}, // 34
- };
+    /* link from 03 to 05 */
+    {&(node_ids[4]), &(node_ids[2])}, // 9
+    {&(node_ids[2]), &(node_ids[4])}, // 10
+    /* link from 03 to 07 */
+    {&(node_ids[6]), &(node_ids[2])}, // 11
+    {&(node_ids[2]), &(node_ids[6])}, // 12
+    /* link from 03 to 09 */
+    {&(node_ids[8]), &(node_ids[2])}, // 13
+    {&(node_ids[2]), &(node_ids[8])}, // 14
+    /* link from 03 to 10 */
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+
+    /* link from 05 to 07 */
+    {&(node_ids[6]), &(node_ids[4])}, // 3
+    {&(node_ids[4]), &(node_ids[6])}, // 4
+
+    /* link from 04 to 05 */
+    {&(node_ids[4]), &(node_ids[3])}, // 5
+    {&(node_ids[3]), &(node_ids[4])}, // 6
+    /* link from 04 to 06 */
+    {&(node_ids[5]), &(node_ids[3])}, // 7
+    {&(node_ids[3]), &(node_ids[5])}, // 8
+};
 
 #define RRT_SIZE        (11)
 icn_routing_entry_t routing_table[RRT_SIZE] = {
