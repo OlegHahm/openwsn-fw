@@ -85,6 +85,7 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 #define INTEREST_INTERVAL   (5000)
 #define FLOW_CONTROL        (1)
 #define FLOW_THR            (5)
+#define USE_CSMA            (0)
 
 #define NUMBER_OF_CHUNKS    (100)
 #define ADDR_LEN_64B    (sizeof(uint8_t) + 8)
@@ -519,9 +520,11 @@ int mote_main(void) {
        neighbors_vars.myDAGrank = 44;
    }
 
+#if (USE_CSMA == 0)
    icn_makeReservation(ssf_int, SSF_INT_SIZE, SSF_INT_OFFSET);
 #if ADAPTIVE_SCHEDULE == 0
    icn_makeReservation(ssf_cs, SSF_CS_SIZE, SSF_CS_OFFSET);
+#endif
 #endif
    scheduler_start();
    return 0; // this line should never be reached
@@ -530,6 +533,9 @@ int mote_main(void) {
 void icn_makeReservation(icn_link_t *schedule, size_t len, size_t offset) {
     /* iterate over the full schedule and make my reservations*/
    for (int i = 0; i < len; i++) {
+#if USE_CSMA
+       icn_addToFixedSchedule(NULL, -1, -1, i+offset);
+#else
        /*  if I am the sender... */
        if (memcmp(myId, schedule[i].sender, ADDR_LEN_64B) == 0) {
            /* without a particular receiver, schedule a shared cell */
@@ -548,6 +554,7 @@ void icn_makeReservation(icn_link_t *schedule, size_t len, size_t offset) {
                icn_addToFixedSchedule(schedule[i].sender, i+offset, -1, -1);
            }
        }
+#endif
    }
 }
 
