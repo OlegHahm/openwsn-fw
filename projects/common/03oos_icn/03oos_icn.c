@@ -83,6 +83,8 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 #define ADAPTIVE_SCHEDULE   (0)
 #define TIMED_SENDING       (0)
 #define INTEREST_INTERVAL   (5000)
+#define FLOW_CONTROL        (1)
+#define FLOW_THR            (5)
 
 #define NUMBER_OF_CHUNKS    (100)
 #define ADDR_LEN_64B    (sizeof(uint8_t) + 8)
@@ -598,6 +600,13 @@ void icn_initInterest(opentimer_id_t id) {
         return;
     }
     if ((neighbors_getNumNeighbors()>=1) && WANT_CONTENT) {
+#if FLOW_CONTROL
+        if (send_counter > (receive_counter + FLOW_THR)) {
+            openserial_printError(COMPONENT_ICN, ERR_ICN_FLOW_CTRL,
+                    send_counter, receive_counter);
+            return;
+        }
+#endif
         /* create packet */
         OpenQueueEntry_t* pkt;
         pkt = openqueue_getFreePacketBuffer(COMPONENT_ICN);

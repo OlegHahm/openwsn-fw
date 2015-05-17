@@ -241,6 +241,7 @@ enum {
    ERR_ICN_RECV1                       = 0x40, // ICN receiving from {0}-{1}
    ERR_ICN_RECV_INT                    = 0x41, // ICN interest received with sequence number {0}
    ERR_ICN_RECV_CONT                   = 0x42, // ICN content received with sequence number {0}, latest interest is {1}
+   ERR_ICN_FLOW_CTRL                   = 0x43, // ICN flow control triggered, sending seq is {0}, while last received seq is {1}
    ERR_DEBUG1                          = 0x44, // DEBUG1: {0} {1}
    ERR_DEBUG2                          = 0x44, // DEBUG2: {0} {1}
    ERR_DEBUG3                          = 0x45, // DEBUG3: {0} {1}
