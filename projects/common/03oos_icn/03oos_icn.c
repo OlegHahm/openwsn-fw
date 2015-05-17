@@ -842,6 +842,9 @@ void iphc_receive(OpenQueueEntry_t* msg) {
 //                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
 //                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
 //                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
+                        msg->l2_asn.bytes0and1,
+                        msg->l2_asn.byte4);
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_INT,
                         (errorparameter_t) icn_pkt->seq,
                         0);
@@ -905,6 +908,9 @@ void iphc_receive(OpenQueueEntry_t* msg) {
 //                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
 //                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
 //                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
+                        msg->l2_asn.bytes0and1,
+                        msg->l2_asn.byte4);
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_CONT,
                         (errorparameter_t) icn_pkt->seq,
                         (errorparameter_t) send_counter);
