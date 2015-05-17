@@ -206,10 +206,11 @@ open_addr_t node_ids[NUMBER_OF_NODES] = {
     NODE_10
 };
 
-#define SSF_INT_SIZE    (NUMBER_OF_NODES + (17*2)) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
+#define STRONG_LINKS    (0)
+#define SSF_INT_SIZE    (NUMBER_OF_NODES + ((17+STRONG_LINKS)*2)) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
 #define SSF_INT_OFFSET  (NUMSERIALRX + SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS)
 
-#define SSF_CS_SIZE     ((17*2)) // (NUMBER_OF_LINKS * 2)
+#define SSF_CS_SIZE     (((17+STRONG_LINKS)*2)) // (NUMBER_OF_LINKS * 2)
 #define SSF_CS_OFFSET   (SSF_INT_OFFSET + SSF_INT_SIZE + 1)
 
 icn_link_t ssf_int[SSF_INT_SIZE] = {
@@ -224,6 +225,20 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
     /* link from 08 to 10 */
     {&(node_ids[9]), &(node_ids[7])}, // 1
     {&(node_ids[7]), &(node_ids[9])}, // 2
+#if STRONG_LINKS >= 4
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+#endif
+#if STRONG_LINKS >= 10
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+#endif
+#if STRONG_LINKS >= 16
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+#endif
 
     /* broadcast cell for NODE_07 */
     {&(node_ids[6]), NULL},
@@ -251,6 +266,20 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
     /* link from 03 to 10 */
     {&(node_ids[9]), &(node_ids[2])}, // 15
     {&(node_ids[2]), &(node_ids[9])}, // 16
+#if STRONG_LINKS >= 4
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+#endif
+#if STRONG_LINKS >= 10
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+#endif
+#if STRONG_LINKS >= 16
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+#endif
     /* link from 03 to 05 */
     {&(node_ids[4]), &(node_ids[2])}, // 9
     {&(node_ids[2]), &(node_ids[4])}, // 10
@@ -260,12 +289,30 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
     /* link from 03 to 09 */
     {&(node_ids[8]), &(node_ids[2])}, // 13
     {&(node_ids[2]), &(node_ids[8])}, // 14
+#if STRONG_LINKS >= 10
+    {&(node_ids[8]), &(node_ids[2])}, // 13
+    {&(node_ids[2]), &(node_ids[8])}, // 14
+#endif
 
     /* broadcast cell for NODE_02 */
     {&(node_ids[1]), NULL},
     /* link from 02 to 03 */
     {&(node_ids[2]), &(node_ids[1])}, // 17
     {&(node_ids[1]), &(node_ids[2])}, // 18
+#if STRONG_LINKS >= 4
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+#endif
+#if STRONG_LINKS >= 10
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+#endif
+#if STRONG_LINKS >= 16
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+#endif
     /* link from 02 to 04 */
     {&(node_ids[3]), &(node_ids[1])}, // 19
     {&(node_ids[1]), &(node_ids[3])}, // 20
@@ -284,6 +331,20 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
     /* link from 01 to 02 */
     {&(node_ids[1]), &(node_ids[0])}, // 27
     {&(node_ids[0]), &(node_ids[1])}, // 28
+#if STRONG_LINKS >= 4
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+#endif
+#if STRONG_LINKS >= 10
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+#endif
+#if STRONG_LINKS >= 16
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+#endif
     /* link from 01 to 04 */
     {&(node_ids[3]), &(node_ids[0])}, // 29
     {&(node_ids[0]), &(node_ids[3])}, // 30
@@ -299,6 +360,20 @@ icn_link_t ssf_cs[SSF_INT_SIZE] = {
     /* link from 01 to 02 */
     {&(node_ids[1]), &(node_ids[0])}, // 27
     {&(node_ids[0]), &(node_ids[1])}, // 28
+#if STRONG_LINKS >= 4
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+#endif
+#if STRONG_LINKS >= 10
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+#endif
+#if STRONG_LINKS >= 16
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+#endif
     /* link from 01 to 04 */
     {&(node_ids[3]), &(node_ids[0])}, // 29
     {&(node_ids[0]), &(node_ids[3])}, // 30
@@ -312,6 +387,20 @@ icn_link_t ssf_cs[SSF_INT_SIZE] = {
     /* link from 02 to 03 */
     {&(node_ids[2]), &(node_ids[1])}, // 17
     {&(node_ids[1]), &(node_ids[2])}, // 18
+#if STRONG_LINKS >= 4
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+#endif
+#if STRONG_LINKS >= 10
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+#endif
+#if STRONG_LINKS >= 16
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+#endif
     /* link from 02 to 04 */
     {&(node_ids[3]), &(node_ids[1])}, // 19
     {&(node_ids[1]), &(node_ids[3])}, // 20
@@ -334,13 +423,45 @@ icn_link_t ssf_cs[SSF_INT_SIZE] = {
     /* link from 03 to 09 */
     {&(node_ids[8]), &(node_ids[2])}, // 13
     {&(node_ids[2]), &(node_ids[8])}, // 14
+#if STRONG_LINKS >= 10
+    {&(node_ids[8]), &(node_ids[2])}, // 13
+    {&(node_ids[2]), &(node_ids[8])}, // 14
+#endif
     /* link from 03 to 10 */
     {&(node_ids[9]), &(node_ids[2])}, // 15
     {&(node_ids[2]), &(node_ids[9])}, // 16
+#if STRONG_LINKS >= 4
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+#endif
+#if STRONG_LINKS >= 10
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+#endif
+#if STRONG_LINKS >= 16
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+#endif
 
     /* link from 08 to 10 */
     {&(node_ids[9]), &(node_ids[7])}, // 1
     {&(node_ids[7]), &(node_ids[9])}, // 2
+#if STRONG_LINKS >= 4
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+#endif
+#if STRONG_LINKS >= 10
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+#endif
+#if STRONG_LINKS >= 16
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+#endif
 
     /* link from 05 to 07 */
     {&(node_ids[6]), &(node_ids[4])}, // 3
