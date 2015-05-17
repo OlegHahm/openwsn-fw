@@ -637,11 +637,13 @@ void icn_initInterest(opentimer_id_t id) {
         ((icn_hdr_t*)pkt->payload)->seq = send_counter++;
         memcpy((pkt->payload + sizeof(icn_hdr_t)), interest, strlen(interest) + 1);
 
-        icn_send(CONTENT_STORE, pkt);
+        if (send_counter < NUMBER_OF_CHUNKS) {
+            icn_send(CONTENT_STORE, pkt);
+        }
 #if (TIMED_SENDING == 0)
             opentimers_stop(icn_vars.timerId);
 #else
-        if (receive_counter >= NUMBER_OF_CHUNKS) { 
+        if (send_counter >= NUMBER_OF_CHUNKS) {
             opentimers_stop(icn_vars.timerId);
         }
 #endif
@@ -778,7 +780,7 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_CONT,
                         (errorparameter_t) icn_pkt->seq,
                         (errorparameter_t) send_counter);
-                receive_counter = icn_pkt->seq;
+                receive_counter = (receive_counter < icn_pkt->seq) ? icn_pkt->seq : receive_counter;
 #if ADAPTIVE_SCHEDULE
                 if (csSlotsActive) {
                     icn_removeRXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
@@ -787,7 +789,7 @@ void iphc_receive(OpenQueueEntry_t* msg) {
 #endif
                 openqueue_freePacketBuffer(msg);
 #if (TIMED_SENDING == 0)
-                if (receive_counter < NUMBER_OF_CHUNKS) { 
+                if (send_counter < NUMBER_OF_CHUNKS) {
                     icn_initInterest(0);
                 }
 #endif
