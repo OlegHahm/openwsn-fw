@@ -81,11 +81,14 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 //=========================== initialization ==================================
 
 #define ADAPTIVE_SCHEDULE   (0)
-#define TIMED_SENDING       (0)
-#define INTEREST_INTERVAL   (5000)
+#define TIMED_SENDING       (1)
+#define INTEREST_INTERVAL   (1000)
 #define FLOW_CONTROL        (1)
 #define FLOW_THR            (5)
 #define USE_CSMA            (0)
+#define STRONG_LINKS        (0)
+#define UNUSED_LINKS        (0)
+#define BIDIRECTIONAL       (0)
 
 #define NUMBER_OF_CHUNKS    (100)
 #define ADDR_LEN_64B    (sizeof(uint8_t) + 8)
@@ -207,11 +210,12 @@ open_addr_t node_ids[NUMBER_OF_NODES] = {
     NODE_10
 };
 
-#define STRONG_LINKS    (0)
-#define SSF_INT_SIZE    (NUMBER_OF_NODES + ((17+STRONG_LINKS)*2)) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
+#define NUMBER_OF_LINKS (4 + (UNUSED_LINKS * 13) + STRONG_LINKS)
+
+#define SSF_INT_SIZE    (NUMBER_OF_NODES + ((NUMBER_OF_LINKS)*(1+BIDIRECTIONAL))) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
 #define SSF_INT_OFFSET  (NUMSERIALRX + SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS)
 
-#define SSF_CS_SIZE     (((17+STRONG_LINKS)*2)) // (NUMBER_OF_LINKS * 2)
+#define SSF_CS_SIZE     (NUMBER_OF_LINKS * (1 + BIDIRECTIONAL)) // (NUMBER_OF_LINKS * 2)
 #define SSF_CS_OFFSET   (SSF_INT_OFFSET + SSF_INT_SIZE + 1)
 
 icn_link_t ssf_int[SSF_INT_SIZE] = {
@@ -224,21 +228,29 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
     /* broadcast cell for NODE_08 */
     {&(node_ids[7]), NULL},
     /* link from 08 to 10 */
+#if BIDIRECTIONAL
     {&(node_ids[9]), &(node_ids[7])}, // 1
+#endif
     {&(node_ids[7]), &(node_ids[9])}, // 2
 #if STRONG_LINKS >= 4
+#if BIDIRECTIONAL
     {&(node_ids[9]), &(node_ids[7])}, // 1
+#endif
     {&(node_ids[7]), &(node_ids[9])}, // 2
 #endif
 #if STRONG_LINKS >= 10
+#if BIDIRECTIONAL
     {&(node_ids[9]), &(node_ids[7])}, // 1
+#endif
     {&(node_ids[7]), &(node_ids[9])}, // 2
 #endif
 #if STRONG_LINKS >= 16
-    {&(node_ids[9]), &(node_ids[7])}, // 1
     {&(node_ids[7]), &(node_ids[9])}, // 2
-    {&(node_ids[9]), &(node_ids[7])}, // 1
     {&(node_ids[7]), &(node_ids[9])}, // 2
+#if BIDIRECTIONAL
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+#endif
 #endif
 
     /* broadcast cell for NODE_07 */
@@ -249,231 +261,364 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
 
     /* broadcast cell for NODE_05 */
     {&(node_ids[4]), NULL},
+#if UNUSED_LINKS
     /* link from 05 to 07 */
     {&(node_ids[6]), &(node_ids[4])}, // 3
+#if BIDIRECTIONAL
     {&(node_ids[4]), &(node_ids[6])}, // 4
+#endif
+#endif
 
     /* broadcast cell for NODE_04 */
     {&(node_ids[3]), NULL},
+#if UNUSED_LINKS
     /* link from 04 to 05 */
     {&(node_ids[4]), &(node_ids[3])}, // 5
+#if BIDIRECTIONAL
     {&(node_ids[3]), &(node_ids[4])}, // 6
+#endif
     /* link from 04 to 06 */
     {&(node_ids[5]), &(node_ids[3])}, // 7
+#if BIDIRECTIONAL
     {&(node_ids[3]), &(node_ids[5])}, // 8
+#endif
+#endif
 
     /* broadcast cell for NODE_03 */
     {&(node_ids[2]), NULL},
     /* link from 03 to 10 */
     {&(node_ids[9]), &(node_ids[2])}, // 15
+#if BIDIRECTIONAL
     {&(node_ids[2]), &(node_ids[9])}, // 16
+#endif
 #if STRONG_LINKS >= 4
     {&(node_ids[9]), &(node_ids[2])}, // 15
+#if BIDIRECTIONAL
     {&(node_ids[2]), &(node_ids[9])}, // 16
+#endif
 #endif
 #if STRONG_LINKS >= 10
     {&(node_ids[9]), &(node_ids[2])}, // 15
+#if BIDIRECTIONAL
     {&(node_ids[2]), &(node_ids[9])}, // 16
+#endif
 #endif
 #if STRONG_LINKS >= 16
     {&(node_ids[9]), &(node_ids[2])}, // 15
-    {&(node_ids[2]), &(node_ids[9])}, // 16
     {&(node_ids[9]), &(node_ids[2])}, // 15
+#if BIDIRECTIONAL
+    {&(node_ids[2]), &(node_ids[9])}, // 16
     {&(node_ids[2]), &(node_ids[9])}, // 16
 #endif
+#endif
+#if UNUSED_LINKS
     /* link from 03 to 05 */
     {&(node_ids[4]), &(node_ids[2])}, // 9
     {&(node_ids[2]), &(node_ids[4])}, // 10
     /* link from 03 to 07 */
     {&(node_ids[6]), &(node_ids[2])}, // 11
     {&(node_ids[2]), &(node_ids[6])}, // 12
+#endif
+#if UNUSED_LINKS
     /* link from 03 to 09 */
+#if BIDIRECTIONAL
     {&(node_ids[8]), &(node_ids[2])}, // 13
+#endif
     {&(node_ids[2]), &(node_ids[8])}, // 14
 #if STRONG_LINKS >= 10
+#if BIDIRECTIONAL
     {&(node_ids[8]), &(node_ids[2])}, // 13
+#endif
     {&(node_ids[2]), &(node_ids[8])}, // 14
+#endif
 #endif
 
     /* broadcast cell for NODE_02 */
     {&(node_ids[1]), NULL},
     /* link from 02 to 03 */
     {&(node_ids[2]), &(node_ids[1])}, // 17
+#if BIDIRECTIONAL
     {&(node_ids[1]), &(node_ids[2])}, // 18
+#endif
 #if STRONG_LINKS >= 4
     {&(node_ids[2]), &(node_ids[1])}, // 17
+#if BIDIRECTIONAL
     {&(node_ids[1]), &(node_ids[2])}, // 18
+#endif
 #endif
 #if STRONG_LINKS >= 10
     {&(node_ids[2]), &(node_ids[1])}, // 17
+#if BIDIRECTIONAL
     {&(node_ids[1]), &(node_ids[2])}, // 18
+#endif
 #endif
 #if STRONG_LINKS >= 16
     {&(node_ids[2]), &(node_ids[1])}, // 17
-    {&(node_ids[1]), &(node_ids[2])}, // 18
     {&(node_ids[2]), &(node_ids[1])}, // 17
+#if BIDIRECTIONAL
+    {&(node_ids[1]), &(node_ids[2])}, // 18
     {&(node_ids[1]), &(node_ids[2])}, // 18
 #endif
+#endif
+
+#if UNUSED_LINKS
     /* link from 02 to 04 */
     {&(node_ids[3]), &(node_ids[1])}, // 19
+#if BIDIRECTIONAL
     {&(node_ids[1]), &(node_ids[3])}, // 20
+#endif
     /* link from 02 to 05 */
     {&(node_ids[4]), &(node_ids[1])}, // 21
+#if BIDIRECTIONAL
     {&(node_ids[1]), &(node_ids[4])}, // 22
+#endif
     /* link from 02 to 06 */
     {&(node_ids[5]), &(node_ids[1])}, // 23
+#if BIDIRECTIONAL
     {&(node_ids[1]), &(node_ids[5])}, // 24
+#endif
     /* link from 02 to 07 */
     {&(node_ids[6]), &(node_ids[1])}, // 25
+#if BIDIRECTIONAL
     {&(node_ids[1]), &(node_ids[6])}, // 26
+#endif
+#endif
 
     /* broadcast cell for NODE_01 */
     {&(node_ids[0]), NULL},
     /* link from 01 to 02 */
     {&(node_ids[1]), &(node_ids[0])}, // 27
+#if BIDIRECTIONAL
     {&(node_ids[0]), &(node_ids[1])}, // 28
+#endif
 #if STRONG_LINKS >= 4
     {&(node_ids[1]), &(node_ids[0])}, // 27
+#if BIDIRECTIONAL
     {&(node_ids[0]), &(node_ids[1])}, // 28
+#endif
 #endif
 #if STRONG_LINKS >= 10
     {&(node_ids[1]), &(node_ids[0])}, // 27
+#if BIDIRECTIONAL
     {&(node_ids[0]), &(node_ids[1])}, // 28
+#endif
 #endif
 #if STRONG_LINKS >= 16
     {&(node_ids[1]), &(node_ids[0])}, // 27
-    {&(node_ids[0]), &(node_ids[1])}, // 28
     {&(node_ids[1]), &(node_ids[0])}, // 27
+#if BIDIRECTIONAL
+    {&(node_ids[0]), &(node_ids[1])}, // 28
     {&(node_ids[0]), &(node_ids[1])}, // 28
 #endif
+#endif
+
+#if UNUSED_LINKS
     /* link from 01 to 04 */
     {&(node_ids[3]), &(node_ids[0])}, // 29
+#if BIDIRECTIONAL
     {&(node_ids[0]), &(node_ids[3])}, // 30
+#endif
     /* link from 01 to 06 */
     {&(node_ids[5]), &(node_ids[0])}, // 31
+#if BIDIRECTIONAL
     {&(node_ids[0]), &(node_ids[5])}, // 32
+#endif
     /* link from 01 to 07 */
     {&(node_ids[6]), &(node_ids[0])}, // 33
+#if BIDIRECTIONAL
     {&(node_ids[0]), &(node_ids[6])}, // 34
+#endif
+#endif
 };
 
 icn_link_t ssf_cs[SSF_INT_SIZE] = {
     /* link from 01 to 02 */
-    {&(node_ids[1]), &(node_ids[0])}, // 27
     {&(node_ids[0]), &(node_ids[1])}, // 28
+#if BIDIRECTIONAL
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+#endif
 #if STRONG_LINKS >= 4
-    {&(node_ids[1]), &(node_ids[0])}, // 27
     {&(node_ids[0]), &(node_ids[1])}, // 28
+#if BIDIRECTIONAL
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+#endif
 #endif
 #if STRONG_LINKS >= 10
-    {&(node_ids[1]), &(node_ids[0])}, // 27
     {&(node_ids[0]), &(node_ids[1])}, // 28
+#if BIDIRECTIONAL
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+#endif
 #endif
 #if STRONG_LINKS >= 16
-    {&(node_ids[1]), &(node_ids[0])}, // 27
     {&(node_ids[0]), &(node_ids[1])}, // 28
-    {&(node_ids[1]), &(node_ids[0])}, // 27
     {&(node_ids[0]), &(node_ids[1])}, // 28
+#if BIDIRECTIONAL
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    {&(node_ids[1]), &(node_ids[0])}, // 27
 #endif
-    /* link from 01 to 04 */
-    {&(node_ids[3]), &(node_ids[0])}, // 29
-    {&(node_ids[0]), &(node_ids[3])}, // 30
-    /* link from 01 to 06 */
-    {&(node_ids[5]), &(node_ids[0])}, // 31
-    {&(node_ids[0]), &(node_ids[5])}, // 32
-    /* link from 01 to 07 */
-    {&(node_ids[6]), &(node_ids[0])}, // 33
-    {&(node_ids[0]), &(node_ids[6])}, // 34
+#endif
 
     /* link from 02 to 03 */
-    {&(node_ids[2]), &(node_ids[1])}, // 17
     {&(node_ids[1]), &(node_ids[2])}, // 18
+#if BIDIRECTIONAL
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+#endif
 #if STRONG_LINKS >= 4
-    {&(node_ids[2]), &(node_ids[1])}, // 17
     {&(node_ids[1]), &(node_ids[2])}, // 18
+#if BIDIRECTIONAL
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+#endif
 #endif
 #if STRONG_LINKS >= 10
-    {&(node_ids[2]), &(node_ids[1])}, // 17
     {&(node_ids[1]), &(node_ids[2])}, // 18
+#if BIDIRECTIONAL
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+#endif
 #endif
 #if STRONG_LINKS >= 16
-    {&(node_ids[2]), &(node_ids[1])}, // 17
     {&(node_ids[1]), &(node_ids[2])}, // 18
-    {&(node_ids[2]), &(node_ids[1])}, // 17
     {&(node_ids[1]), &(node_ids[2])}, // 18
+#if BIDIRECTIONAL
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    {&(node_ids[2]), &(node_ids[1])}, // 17
 #endif
-    /* link from 02 to 04 */
-    {&(node_ids[3]), &(node_ids[1])}, // 19
-    {&(node_ids[1]), &(node_ids[3])}, // 20
-    /* link from 02 to 05 */
-    {&(node_ids[4]), &(node_ids[1])}, // 21
-    {&(node_ids[1]), &(node_ids[4])}, // 22
-    /* link from 02 to 06 */
-    {&(node_ids[5]), &(node_ids[1])}, // 23
-    {&(node_ids[1]), &(node_ids[5])}, // 24
-    /* link from 02 to 07 */
-    {&(node_ids[6]), &(node_ids[1])}, // 25
-    {&(node_ids[1]), &(node_ids[6])}, // 26
+#endif
 
+    /* link from 03 to 10 */
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+#if BIDIRECTIONAL
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+#endif
+#if STRONG_LINKS >= 4
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+#if BIDIRECTIONAL
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+#endif
+#endif
+#if STRONG_LINKS >= 10
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+#if BIDIRECTIONAL
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+#endif
+#endif
+#if STRONG_LINKS >= 16
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+#if BIDIRECTIONAL
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+#endif
+#endif
+
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+#if BIDIRECTIONAL
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+#endif
+#if STRONG_LINKS >= 4
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+#if BIDIRECTIONAL
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+#endif
+#endif
+#if STRONG_LINKS >= 10
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+#if BIDIRECTIONAL
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+#endif
+#endif
+#if STRONG_LINKS >= 16
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+#if BIDIRECTIONAL
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+#endif
+#endif
+
+#if UNUSED_LINKS
+    /* link from 05 to 07 */
+    {&(node_ids[6]), &(node_ids[4])}, // 3
+#if BIDIRECTIONAL
+    {&(node_ids[4]), &(node_ids[6])}, // 4
+#endif
+#endif
+
+#if UNUSED_LINKS
+    /* link from 04 to 05 */
+    {&(node_ids[4]), &(node_ids[3])}, // 5
+#if BIDIRECTIONAL
+    {&(node_ids[3]), &(node_ids[4])}, // 6
+#endif
+    /* link from 04 to 06 */
+    {&(node_ids[5]), &(node_ids[3])}, // 7
+#if BIDIRECTIONAL
+    {&(node_ids[3]), &(node_ids[5])}, // 8
+#endif
+#endif
+
+#if UNUSED_LINKS
     /* link from 03 to 05 */
     {&(node_ids[4]), &(node_ids[2])}, // 9
     {&(node_ids[2]), &(node_ids[4])}, // 10
     /* link from 03 to 07 */
     {&(node_ids[6]), &(node_ids[2])}, // 11
     {&(node_ids[2]), &(node_ids[6])}, // 12
+#endif
+#if UNUSED_LINKS
     /* link from 03 to 09 */
+#if BIDIRECTIONAL
     {&(node_ids[8]), &(node_ids[2])}, // 13
+#endif
     {&(node_ids[2]), &(node_ids[8])}, // 14
 #if STRONG_LINKS >= 10
+#if BIDIRECTIONAL
     {&(node_ids[8]), &(node_ids[2])}, // 13
+#endif
     {&(node_ids[2]), &(node_ids[8])}, // 14
 #endif
-    /* link from 03 to 10 */
-    {&(node_ids[9]), &(node_ids[2])}, // 15
-    {&(node_ids[2]), &(node_ids[9])}, // 16
-#if STRONG_LINKS >= 4
-    {&(node_ids[9]), &(node_ids[2])}, // 15
-    {&(node_ids[2]), &(node_ids[9])}, // 16
-#endif
-#if STRONG_LINKS >= 10
-    {&(node_ids[9]), &(node_ids[2])}, // 15
-    {&(node_ids[2]), &(node_ids[9])}, // 16
-#endif
-#if STRONG_LINKS >= 16
-    {&(node_ids[9]), &(node_ids[2])}, // 15
-    {&(node_ids[2]), &(node_ids[9])}, // 16
-    {&(node_ids[9]), &(node_ids[2])}, // 15
-    {&(node_ids[2]), &(node_ids[9])}, // 16
 #endif
 
-    /* link from 08 to 10 */
-    {&(node_ids[9]), &(node_ids[7])}, // 1
-    {&(node_ids[7]), &(node_ids[9])}, // 2
-#if STRONG_LINKS >= 4
-    {&(node_ids[9]), &(node_ids[7])}, // 1
-    {&(node_ids[7]), &(node_ids[9])}, // 2
+#if UNUSED_LINKS
+    /* link from 02 to 04 */
+    {&(node_ids[3]), &(node_ids[1])}, // 19
+#if BIDIRECTIONAL
+    {&(node_ids[1]), &(node_ids[3])}, // 20
 #endif
-#if STRONG_LINKS >= 10
-    {&(node_ids[9]), &(node_ids[7])}, // 1
-    {&(node_ids[7]), &(node_ids[9])}, // 2
+    /* link from 02 to 05 */
+    {&(node_ids[4]), &(node_ids[1])}, // 21
+#if BIDIRECTIONAL
+    {&(node_ids[1]), &(node_ids[4])}, // 22
 #endif
-#if STRONG_LINKS >= 16
-    {&(node_ids[9]), &(node_ids[7])}, // 1
-    {&(node_ids[7]), &(node_ids[9])}, // 2
-    {&(node_ids[9]), &(node_ids[7])}, // 1
-    {&(node_ids[7]), &(node_ids[9])}, // 2
+    /* link from 02 to 06 */
+    {&(node_ids[5]), &(node_ids[1])}, // 23
+#if BIDIRECTIONAL
+    {&(node_ids[1]), &(node_ids[5])}, // 24
+#endif
+    /* link from 02 to 07 */
+    {&(node_ids[6]), &(node_ids[1])}, // 25
+#if BIDIRECTIONAL
+    {&(node_ids[1]), &(node_ids[6])}, // 26
+#endif
 #endif
 
-    /* link from 05 to 07 */
-    {&(node_ids[6]), &(node_ids[4])}, // 3
-    {&(node_ids[4]), &(node_ids[6])}, // 4
-
-    /* link from 04 to 05 */
-    {&(node_ids[4]), &(node_ids[3])}, // 5
-    {&(node_ids[3]), &(node_ids[4])}, // 6
-    /* link from 04 to 06 */
-    {&(node_ids[5]), &(node_ids[3])}, // 7
-    {&(node_ids[3]), &(node_ids[5])}, // 8
+#if UNUSED_LINKS
+    /* link from 01 to 04 */
+    {&(node_ids[3]), &(node_ids[0])}, // 29
+#if BIDIRECTIONAL
+    {&(node_ids[0]), &(node_ids[3])}, // 30
+#endif
+    /* link from 01 to 06 */
+    {&(node_ids[5]), &(node_ids[0])}, // 31
+#if BIDIRECTIONAL
+    {&(node_ids[0]), &(node_ids[5])}, // 32
+#endif
+    /* link from 01 to 07 */
+    {&(node_ids[6]), &(node_ids[0])}, // 33
+#if BIDIRECTIONAL
+    {&(node_ids[0]), &(node_ids[6])}, // 34
+#endif
+#endif
 };
 
 #define RRT_SIZE        (11)
