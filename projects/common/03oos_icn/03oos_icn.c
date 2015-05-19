@@ -585,6 +585,9 @@ void icn_initInterest(opentimer_id_t id) {
             csSlotsActive = 1;
             open_addr_t *nextHop = _routeLookup(CONTENT_STORE);
             icn_makeRXReservation(ssf_cs, nextHop, SSF_CS_SIZE, SSF_CS_OFFSET);
+            openserial_printInfo(COMPONENT_ICN, ERR_DEBUG2,
+                    nextHop.addr_64b[6],
+                    nextHop.addr_64b[7]};
         }
 #endif
 
@@ -668,6 +671,9 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                     csSlotsActive = 1;
                     /* for next hop, to receive potential content */
                     icn_makeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
+                    openserial_printInfo(COMPONENT_ICN, ERR_DEBUG1,
+                            msg->l2_nextORpreviousHop.addr_64b[6],
+                            msg->l2_nextORpreviousHop.addr_64b[7]};
                 }
 #endif
 //                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
@@ -708,9 +714,15 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                     /* for next hop, to receive potential content */
                     open_addr_t *nextHop = _routeLookup(CONTENT_STORE);
                     icn_makeRXReservation(ssf_cs, nextHop, SSF_CS_SIZE, SSF_CS_OFFSET);
+                    openserial_printInfo(COMPONENT_ICN, ERR_DEBUG2,
+                            nextHop.addr_64b[6],
+                            nextHop.addr_64b[7]};
 
                     /* for previous hop to send back the potential content */
                     icn_makeTXReservation(ssf_cs, &pit_entry, SSF_CS_SIZE, SSF_CS_OFFSET);
+                    openserial_printInfo(COMPONENT_ICN, ERR_DEBUG1,
+                            pit.addr_64b[6],
+                            pit.addr_64b[7]};
                 }
 #endif
 
