@@ -179,7 +179,7 @@ icn_routing_entry_t routing_table[RRT_SIZE] = {
 #else
 #define NUMBER_OF_NODES     (10)
 
-#ifdef LILLE
+#if LILLE
 #define NODE_01	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xdb, 0xa7, 0x90 }} // m3-229
 #define NODE_02	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xdd, 0xb0, 0x73 }} // m3-228
 #define NODE_03	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x02, 0xd0, 0x09, 0x59 }} // m3-227
@@ -226,35 +226,33 @@ open_addr_t node_ids[NUMBER_OF_NODES] = {
     NODE_10
 };
 
-#define NUMBER_OF_LINKS (4 + STRONG_LINKS)
+#define NUMBER_OF_LINKS (4)
 
-#define SSF_INT_SIZE    (NUMBER_OF_NODES + ((NUMBER_OF_LINKS)*(1+BIDIRECTIONAL))) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
+#define SSF_INT_SIZE    (NUMBER_OF_NODES - 1 + NUMBER_OF_LINKS + STRONG_LINKS) 
 #define SSF_INT_OFFSET  (NUMSERIALRX + SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS)
 
-#define SSF_CS_SIZE     ((NUMBER_OF_LINKS + (UNUSED_LINKS * 13)) * (1 + BIDIRECTIONAL)) // (NUMBER_OF_LINKS * 2)
+#define SSF_CS_SIZE     ((NUMBER_OF_LINKS * 2 + STRONG_LINKS + (UNUSED_LINKS * 13))) // (NUMBER_OF_LINKS * 2)
 #define SSF_CS_OFFSET   (SSF_INT_OFFSET + SSF_INT_SIZE + 1)
 
 icn_link_t ssf_int[SSF_INT_SIZE] = {
-    /* broadcast cell for NODE_01 */
-    {&(node_ids[0]), NULL},
-
     /* broadcast cell for NODE_08 */
     {&(node_ids[7]), NULL},
+    /* broadcast cell for NODE_10 */
+    {&(node_ids[9]), NULL},
+    /* broadcast cell for NODE_03 */
+    {&(node_ids[2]), NULL},
+    /* broadcast cell for NODE_02 */
+    {&(node_ids[1]), NULL},
+
     /* link from 08 to 10 */
     {&(node_ids[7]), &(node_ids[9])}, // 2
 
-    /* broadcast cell for NODE_10 */
-    {&(node_ids[9]), NULL},
     /* link from 10 to 03 */
     {&(node_ids[9]), &(node_ids[2])}, // 15
 
-    /* broadcast cell for NODE_03 */
-    {&(node_ids[2]), NULL},
     /* link from 03 to 02 */
     {&(node_ids[2]), &(node_ids[1])}, // 17
 
-    /* broadcast cell for NODE_02 */
-    {&(node_ids[1]), NULL},
     /* link from 02 to 01 */
     {&(node_ids[1]), &(node_ids[0])}, // 27
 
@@ -275,6 +273,17 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
 };
 
 icn_link_t ssf_cs[SSF_CS_SIZE] = {
+    /* link from 01 to 02 */
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+
+    /* link from 02 to 03 */
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+
+    /* link from 03 to 10 */
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
     /* link from 01 to 02 */
     {&(node_ids[0]), &(node_ids[1])}, // 28
 
