@@ -84,102 +84,30 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 
 #define ADAPTIVE_SCHEDULE   (0)
 #define TIMED_SENDING       (1)
-#define INTEREST_INTERVAL   (1000)
+#define INTEREST_INTERVAL   (1500)
 #define FLOW_CONTROL        (1)
-#define FLOW_THR            (5)
+#define FLOW_THR            (40)
 #define USE_CSMA            (0)
 #define STRONG_LINKS        (0)
 #define UNUSED_LINKS        (1)
-#define BIDIRECTIONAL       (0)
-#define LILLE               (1)
+#define LILLE               (0)
 
 #define NUMBER_OF_CHUNKS    (100)
 #define ADDR_LEN_64B    (sizeof(uint8_t) + 8)
 
 #define CONTENT_STORE   (&node_ids[0])
 #define HAS_CONTENT     (memcmp(myId, CONTENT_STORE, ADDR_LEN_64B) == 0)
-#define WANT_CONTENT    (memcmp(myId, &(node_ids[7]), ADDR_LEN_64B) == 0)
+#define WANT_CONTENT    (memcmp(myId, &(node_ids[9]), ADDR_LEN_64B) == 0)
+#define NUMBER_OF_NODES     (10)
 
 #ifdef SIMU
 #warning SIMULATION build
-#define NUMBER_OF_NODES     (5)
 #define NODE_01     {.type = ADDR_64B, .addr_64b = {0x14, 0x15, 0x92, 0xcc, 0x00, 0x00, 0x00, 0x01}}
 #define NODE_02     {.type = ADDR_64B, .addr_64b = {0x14, 0x15, 0x92, 0xcc, 0x00, 0x00, 0x00, 0x02}}
 #define NODE_03     {.type = ADDR_64B, .addr_64b = {0x14, 0x15, 0x92, 0xcc, 0x00, 0x00, 0x00, 0x03}}
 #define NODE_04     {.type = ADDR_64B, .addr_64b = {0x14, 0x15, 0x92, 0xcc, 0x00, 0x00, 0x00, 0x04}}
 #define NODE_05     {.type = ADDR_64B, .addr_64b = {0x05, 0x15, 0x92, 0xcc, 0x00, 0x00, 0x00, 0x05}}
-
-open_addr_t node_ids[NUMBER_OF_NODES] = {
-    NODE_01,
-    NODE_02,
-    NODE_03,
-    NODE_04,
-    NODE_05,
-};
-
-
-#define SSF_INT_SIZE   (NUMBER_OF_NODES + (7*2)) // NUMBER_OF_NODES + (NUMBER_OF_LINKS * 2)
-
-icn_link_t  ssf_int[SSF_INT_SIZE] = {
-    /* broadcast cell for NODE_01 */
-    {&(node_ids[0]), NULL},
-    /* link from 01 to 02 */
-    {&(node_ids[1]), &(node_ids[0])},
-    {&(node_ids[0]), &(node_ids[1])},
-    /* link from 01 to 04 */
-    {&(node_ids[3]), &(node_ids[0])},
-    {&(node_ids[0]), &(node_ids[3])},
-
-    /* broadcast cell for NODE_02 */
-    {&(node_ids[1]), NULL},
-    /* link from 02 to 03 */
-    {&(node_ids[2]), &(node_ids[1])},
-    {&(node_ids[1]), &(node_ids[2])},
-    /* link from 02 to 04 */
-    {&(node_ids[3]), &(node_ids[1])},
-    {&(node_ids[1]), &(node_ids[3])},
-    /* link from 02 to 05 */
-    {&(node_ids[4]), &(node_ids[1])},
-    {&(node_ids[1]), &(node_ids[4])},
-
-    /* broadcast cell for NODE_03 */
-    {&(node_ids[2]), NULL},
-    /* link from 02 to 05 */
-    {&(node_ids[4]), &(node_ids[2])},
-    {&(node_ids[2]), &(node_ids[4])},
-
-    /* broadcast cell for NODE_04 */
-    {&(node_ids[3]), NULL},
-    /* link from 04 to 05 */
-    {&(node_ids[4]), &(node_ids[3])},
-    {&(node_ids[3]), &(node_ids[4])},
-
-    /* broadcast cell for NODE_05 */
-    {&(node_ids[4]), NULL},
-};
-
-#define RRT_SIZE        (6)
-icn_routing_entry_t routing_table[RRT_SIZE] = {
-    /* default route for 02 over 01 */
-    {&(node_ids[1]), NULL, &(node_ids[0])},
-    /* default route for 03 over 02 */
-    {&(node_ids[2]), NULL, &(node_ids[1])},
-    /* default route for 04 over 01 */
-    {&(node_ids[3]), NULL, &(node_ids[0])},
-    /* default route for 05 over 02 */
-    {&(node_ids[4]), NULL, &(node_ids[1])},
-
-    /* route for 01 to 03 over 02 */
-    {&(node_ids[0]), &(node_ids[2]), &(node_ids[1])},
-    /* route for 01 to 05 over 02 */
-    {&(node_ids[0]), &(node_ids[4]), &(node_ids[1])},
-};
-
-
-#else
-#define NUMBER_OF_NODES     (10)
-
-#if LILLE
+#elif LILLE
 #define NODE_01	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xdb, 0xa7, 0x90 }} // m3-229
 #define NODE_02	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xdd, 0xb0, 0x73 }} // m3-228
 #define NODE_03	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x02, 0xd0, 0x09, 0x59 }} // m3-227
@@ -199,10 +127,10 @@ icn_routing_entry_t routing_table[RRT_SIZE] = {
 //#define NODE_05     {.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xd9, 0xb3, 0x83}} // m3-248
 #define NODE_04 	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xd7, 0xb1, 0x80}} // m3-224
 #define NODE_05 	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xde, 0xb8, 0x81}} // m3-246
-//#define NODE_06	    {.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x02, 0xd6, 0x38, 0x61}} // m3-230
 //#define NODE_06 	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xd6, 0xb5, 0x82}} // m3-218
 #define NODE_06 	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xd5, 0x95, 0x67}} // m3-214
-#define NODE_07	    {.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x02, 0xdb, 0x37, 0x61}} // m3-240
+//#define NODE_07	    {.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x02, 0xdb, 0x37, 0x61}} // m3-240
+#define NODE_07	    {.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x02, 0xd6, 0x38, 0x61}} // m3-230
 //#define NODE_08	    {.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x02, 0xdc, 0x28, 0x61}} // m3-272
 //#define NODE_08 	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xdc, 0xa6, 0x82}} // m3-6
 #define NODE_08 	{.type = ADDR_64B, .addr_64b = {0x05, 0x43, 0x32, 0xff, 0x03, 0xdb, 0x99, 0x83}} // m3-8
@@ -256,6 +184,75 @@ icn_link_t ssf_int[SSF_INT_SIZE] = {
     /* link from 02 to 01 */
     {&(node_ids[1]), &(node_ids[0])}, // 27
 
+#if (STRONG_LINKS == 16)
+    /* link from 08 to 10 */
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    /* link from 10 to 03 */
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    /* link from 03 to 02 */
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    /* link from 02 to 01 */
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    /* link from 08 to 10 */
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    /* link from 10 to 03 */
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    /* link from 03 to 02 */
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    /* link from 02 to 01 */
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    /* link from 08 to 10 */
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    /* link from 10 to 03 */
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    /* link from 03 to 02 */
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    /* link from 02 to 01 */
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    /* link from 08 to 10 */
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    /* link from 10 to 03 */
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    /* link from 03 to 02 */
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    /* link from 02 to 01 */
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+#endif
+#if (STRONG_LINKS == 32)
+    /* link from 08 to 10 */
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    /* link from 10 to 03 */
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    /* link from 03 to 02 */
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    /* link from 02 to 01 */
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    /* link from 08 to 10 */
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    /* link from 10 to 03 */
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    /* link from 03 to 02 */
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    /* link from 02 to 01 */
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    /* link from 08 to 10 */
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    /* link from 10 to 03 */
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    /* link from 03 to 02 */
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    /* link from 02 to 01 */
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+    /* link from 08 to 10 */
+    {&(node_ids[7]), &(node_ids[9])}, // 2
+    /* link from 10 to 03 */
+    {&(node_ids[9]), &(node_ids[2])}, // 15
+    /* link from 03 to 02 */
+    {&(node_ids[2]), &(node_ids[1])}, // 17
+    /* link from 02 to 01 */
+    {&(node_ids[1]), &(node_ids[0])}, // 27
+#endif
+
     /* broadcast cell for NODE_09 */
     {&(node_ids[8]), NULL},
 
@@ -295,6 +292,77 @@ icn_link_t ssf_cs[SSF_CS_SIZE] = {
 
     /* link from 08 to 10 */
     {&(node_ids[9]), &(node_ids[7])}, // 1
+
+#if (STRONG_LINKS == 16)
+    /* link from 01 to 02 */
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    /* link from 02 to 03 */
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+    /* link from 03 to 10 */
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    /* link from 01 to 02 */
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    /* link from 02 to 03 */
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+    /* link from 03 to 10 */
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    /* link from 01 to 02 */
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    /* link from 02 to 03 */
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+    /* link from 03 to 10 */
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    /* link from 01 to 02 */
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    /* link from 02 to 03 */
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+    /* link from 03 to 10 */
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+#endif
+
+#if (STRONG_LINKS == 32)
+    /* link from 01 to 02 */
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    /* link from 02 to 03 */
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+    /* link from 03 to 10 */
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    /* link from 01 to 02 */
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    /* link from 02 to 03 */
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+    /* link from 03 to 10 */
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    /* link from 01 to 02 */
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    /* link from 02 to 03 */
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+    /* link from 03 to 10 */
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+    /* link from 01 to 02 */
+    {&(node_ids[0]), &(node_ids[1])}, // 28
+    /* link from 02 to 03 */
+    {&(node_ids[1]), &(node_ids[2])}, // 18
+    /* link from 03 to 10 */
+    {&(node_ids[2]), &(node_ids[9])}, // 16
+    /* link from 08 to 10 */
+    {&(node_ids[9]), &(node_ids[7])}, // 1
+#endif
+
 
 #if UNUSED_LINKS
     {&(node_ids[4]), &(node_ids[2])},
@@ -338,8 +406,6 @@ icn_routing_entry_t routing_table[RRT_SIZE] = {
     /* route for 01 to 05 over 02 */
     {&(node_ids[0]), &(node_ids[4]), &(node_ids[1])},
 };
-
-#endif
 
 BITFIELD(128, received_chunks);
 
@@ -592,6 +658,8 @@ void icn_initContent(open_addr_t *lastHop) {
     ((icn_hdr_t*)pkt->payload)->seq = send_counter;
     memcpy((pkt->payload + sizeof(icn_hdr_t)), content, strlen(content) + 1);
 
+    openserial_printError(COMPONENT_ICN, ERR_ICN_SEND,
+            (errorparameter_t)send_counter, (errorparameter_t)0);
     icn_send(lastHop, pkt);
 }
 
