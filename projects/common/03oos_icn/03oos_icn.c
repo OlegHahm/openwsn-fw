@@ -31,6 +31,7 @@ extern neighbors_vars_t neighbors_vars;
 typedef enum {
     ICN_INTEREST    = 1,
     ICN_CONTENT     = 2,
+    ICN_BACKGROUND  = 3
 } icn_packet_type_t;
 
 typedef struct {
@@ -90,6 +91,7 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 #define USE_CSMA            (0)
 #define STRONG_LINKS        (0)
 #define UNUSED_LINKS        (1)
+#define BACKGROUND          (1)
 #define LILLE               (0)
 
 #define NUMBER_OF_CHUNKS    (100)
@@ -98,6 +100,10 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 #define CONTENT_STORE   (&node_ids[0])
 #define HAS_CONTENT     (memcmp(myId, CONTENT_STORE, ADDR_LEN_64B) == 0)
 #define WANT_CONTENT    (memcmp(myId, &(node_ids[9]), ADDR_LEN_64B) == 0)
+#define BACKGROUND_NODE ((memcmp(myId, &(node_ids[3]), ADDR_LEN_64B) == 0) || \
+        (memcmp(myId, &(node_ids[3]), ADDR_LEN_64B) == 0) || (memcmp(myId, \
+                &(node_ids[3]), ADDR_LEN_64B) == 0))
+
 #define NUMBER_OF_NODES     (10)
 
 #ifdef SIMU
@@ -281,6 +287,7 @@ icn_link_t ssf_cs[SSF_CS_SIZE] = {
 
     /* link from 08 to 10 */
     {&(node_ids[9]), &(node_ids[7])}, // 1
+
     /* link from 01 to 02 */
     {&(node_ids[0]), &(node_ids[1])}, // 28
 
@@ -722,6 +729,29 @@ void icn_initInterest(opentimer_id_t id) {
 #endif
     }
 
+#if BACKGROUND
+    if (BACKGROUND_NODE) {
+        /* create packet */
+        OpenQueueEntry_t* pkt;
+        pkt = openqueue_getFreePacketBuffer(COMPONENT_ICN);
+        if (pkt==NULL) {
+            openserial_printError(COMPONENT_ICN, ERR_NO_FREE_PACKET_BUFFER,
+                    (errorparameter_t)0, (errorparameter_t)0);
+            return;
+        }
+
+        pkt->creator                   = COMPONENT_ICN;
+        pkt->owner                     = COMPONENT_ICN;
+        pkt->l2_nextORpreviousHop.type = ADDR_64B;
+
+        packetfunctions_reserveHeaderSize(pkt, sizeof(icn_hdr_t) + strlen(interest) + 1);
+        ((icn_hdr_t*)pkt->payload)->type = ICN_BACKGROUND;
+        ((icn_hdr_t*)pkt->payload)->seq = send_counter++;
+        memcpy((pkt->payload + sizeof(icn_hdr_t)), interest, strlen(interest) + 1);
+
+        icn_send(CONTENT_STORE, pkt);
+    }
+#endif
     if (!idmanager_getIsDAGroot() && slot0isActive) {
         /*  remove default slot  */
         open_addr_t tmp;
