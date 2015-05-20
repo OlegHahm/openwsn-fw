@@ -63,6 +63,7 @@ unsigned pit_ctr = 0;
 unsigned slot0isActive = 1;
 uint16_t send_counter = 0;
 uint16_t receive_counter = 0;
+uint16_t fail_counter = 0;
 unsigned csSlotsActive = 0;
 
 //=========================== prototypes ======================================
@@ -556,6 +557,9 @@ void icn_initContent(open_addr_t *lastHop) {
 }
 
 void icn_initInterest(opentimer_id_t id) {
+    if (fail_counter) {
+        openserial_printInfo(COMPONENT_ICN, ERR_ICN_TX_FAIL_COUNT, fail_counter, 0);
+    }
     if (!ieee154e_isSynch()) {
         if (!slot0isActive) {
             icn_addToFixedSchedule(&(node_ids[0]), -1, -1, 0);
@@ -661,6 +665,7 @@ void iphc_init(void) {
 
 void iphc_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
     msg->owner = COMPONENT_ICN;
+    fail_counter += msg->l2_numTxAttempts - 1;
 #if ADAPTIVE_SCHEDULE
     if (HAS_CONTENT) {
         if (csSlotsActive) {
@@ -756,7 +761,7 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                         msg->l2_asn.bytes0and1,
                         (errorparameter_t) icn_pkt->seq);
                 if (bf_isset(received_chunks, icn_pkt->seq)) {
-                    openserial_printInfo(COMPONENT_ICN, ERR_LOOP_DETECTED,
+                    openserial_printInfo(COMPONENT_ICN, ERR_ICN_DUPLICATE,
                             icn_pkt->seq, 0);
                 }
                 else {
