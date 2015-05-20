@@ -661,7 +661,21 @@ void iphc_init(void) {
 
 void iphc_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
     msg->owner = COMPONENT_ICN;
-    //openserial_printInfo(COMPONENT_ICN, ERR_ICN_SEND, 2, (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
+#if ADAPTIVE_SCHEDULE
+    if (HAS_CONTENT) {
+        if (csSlotsActive) {
+            icn_removeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
+            csSlotsActive = 0;
+        }
+    }
+    else {
+        if ((pit_ctr <= 1) && (csSlotsActive)) {
+            icn_removeRXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
+            icn_removeTXReservation(ssf_cs, &pit_entry, SSF_CS_SIZE, SSF_CS_OFFSET);
+            csSlotsActive = 0;
+        }
+    }
+#endif
     openqueue_freePacketBuffer(msg);
 }
 
@@ -676,28 +690,20 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                     csSlotsActive = 1;
                     /* for next hop, to receive potential content */
                     icn_makeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
-                    openserial_printInfo(COMPONENT_ICN, ERR_DEBUG1,
-                            msg->l2_nextORpreviousHop.addr_64b[6],
-                            msg->l2_nextORpreviousHop.addr_64b[7]};
+//                    openserial_printInfo(COMPONENT_ICN, ERR_DEBUG1, msg->l2_nextORpreviousHop.addr_64b[6], msg->l2_nextORpreviousHop.addr_64b[7]);
                 }
 #endif
 //                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
 //                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
 //                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
-                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
-                        msg->l2_asn.bytes0and1,
-                        msg->l2_asn.byte4);
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_INT,
-                        (errorparameter_t) icn_pkt->seq,
-                        0);
+                        msg->l2_asn.bytes0and1,
+//                        msg->l2_asn.byte4);
+//                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_INT,
+                        (errorparameter_t) icn_pkt->seq);
+//                        0);
                 send_counter = icn_pkt->seq;
                 icn_initContent(&(msg->l2_nextORpreviousHop));
-#if ADAPTIVE_SCHEDULE
-                if (csSlotsActive) {
-                    icn_removeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
-                    csSlotsActive = 0;
-                }
-#endif
                 openqueue_freePacketBuffer(msg);
             }
             else {
@@ -738,13 +744,6 @@ void iphc_receive(OpenQueueEntry_t* msg) {
             break;
         case ICN_CONTENT:
             if (pit_entry.type != ADDR_NONE) {
-#if ADAPTIVE_SCHEDULE
-                if (csSlotsActive) {
-                    icn_removeRXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
-                    icn_removeTXReservation(ssf_cs, &pit_entry, SSF_CS_SIZE, SSF_CS_OFFSET);
-                    csSlotsActive = 0;
-                }
-#endif
                 msg->creator = COMPONENT_ICN;
                 icn_send(&pit_entry, msg);
                 if (--pit_ctr <= 0) {
@@ -753,15 +752,9 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                 }
             }
             else if (WANT_CONTENT) {
-//                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
-//                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
-//                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[7]);
-                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
-                        msg->l2_asn.bytes0and1,
-                        msg->l2_asn.byte4);
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_CONT,
-                        (errorparameter_t) icn_pkt->seq,
-                        (errorparameter_t) send_counter);
+                        msg->l2_asn.bytes0and1,
+                        (errorparameter_t) icn_pkt->seq);
                 if (bf_isset(received_chunks, icn_pkt->seq)) {
                     openserial_printInfo(COMPONENT_ICN, ERR_LOOP_DETECTED,
                             icn_pkt->seq, 0);
