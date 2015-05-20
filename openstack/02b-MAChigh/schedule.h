@@ -22,12 +22,12 @@ The superframe repears over time and can be arbitrarly long.
 //draft-ietf-6tisch-minimal-06
 #define SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS                      1
 #define SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET                        0
-#define SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET                     15
+#define SCHEDULE_MINIMAL_6TISCH_CHANNELOFFSET                     5
 #define SCHEDULE_MINIMAL_6TISCH_DEFAULT_SLOTFRAME_HANDLE          1 //id of slotframe
 #define SCHEDULE_MINIMAL_6TISCH_DEFAULT_SLOTFRAME_NUMBER          1 //1 slotframe by default.
 
 #define NUMSERIALRX          1
-#define NUMSLOTSOFF          52
+#define NUMSLOTSOFF          3
 
 /**
 \brief Maximum number of active slots in a superframe.
@@ -39,7 +39,7 @@ in that table; a slot is "active" when it is not of type CELLTYPE_OFF.
 Set this number to the exact number of active slots you are planning on having
 in your schedule, so not to waste RAM.
 */
-#define MAXACTIVESLOTS       (SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS+NUMSERIALRX+NUMSLOTSOFF)
+#define MAXACTIVESLOTS       (SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS+NUMSERIALRX+NUMSLOTSOFF+95)
 
 /**
 \brief Minimum backoff exponent.
