@@ -391,40 +391,59 @@ void icn_makeReservation(icn_link_t *schedule, size_t len, size_t offset) {
 
 void icn_makeTXReservation(icn_link_t *schedule, open_addr_t *neighbor, size_t len, size_t offset) {
     slotinfo_element_t slot_info;
+    uint16_t tmp = 0;
     /* iterate over the full schedule and make my reservations*/
    for (int i = 0; i < len; i++) {
        /*  if I am the sender for this particular receiver */
        if (packetfunctions_sameAddress(myId, schedule[i].sender) &&
                packetfunctions_sameAddress(neighbor, schedule[i].receiver)) {
+           if (tmp++ < csSlotsActive) {
+               continue;
+           }
 
            schedule_getSlotInfo(i+offset, schedule[i].receiver, &slot_info);
            if (slot_info.link_type != CELLTYPE_OFF) {
                openserial_printError(COMPONENT_ICN, ERR_WRONG_CELLTYPE,
                        i+offset, slot_info.link_type);
            }
+           openserial_printError(COMPONENT_ICN, ERR_DEBUG3,
+                        i+offset, 1);
            icn_addToFixedSchedule(schedule[i].receiver, -1, i+offset, -1);
+           return;
        }
    }
 }
 
 void icn_removeTXReservation(icn_link_t *schedule, open_addr_t *neighbor, size_t len, size_t offset) {
+    uint16_t tmp = 0;
+    openserial_printError(COMPONENT_ICN, ERR_DEBUG1, csSlotsActive, 0);
     /* iterate over the full schedule and remove my reservations*/
    for (int i = 0; i < len; i++) {
        /* if I am the sender */
        if (packetfunctions_sameAddress(myId, schedule[i].sender) &&
                packetfunctions_sameAddress(neighbor, schedule[i].receiver)) {
+           if (tmp++ < (csSlotsActive - 1)) {
+               continue;
+           }
+           openserial_printError(COMPONENT_ICN, ERR_DEBUG3,
+                        i+offset, 0);
            schedule_removeActiveSlot(i+offset, schedule[i].receiver);
+           return;
        }
    }
 }
 
 void icn_makeRXReservation(icn_link_t *schedule, open_addr_t *neighbor, size_t len, size_t offset) {
     slotinfo_element_t slot_info;
+    uint16_t tmp = 0;
     /* iterate over the full schedule and make my reservations*/
    for (int i = 0; i < len; i++) {
        /* if I am the receiver for the given sender */
        if (packetfunctions_sameAddress(myId, schedule[i].receiver) &&
                packetfunctions_sameAddress(neighbor, schedule[i].sender)) {
+           if (tmp++ < csSlotsActive) {
+               continue;
+           }
 
            schedule_getSlotInfo(i+offset, schedule[i].sender, &slot_info);
            if (slot_info.link_type != CELLTYPE_OFF) {
@@ -432,18 +451,29 @@ void icn_makeRXReservation(icn_link_t *schedule, open_addr_t *neighbor, size_t l
                         slot_info.link_type, i+offset);
                return;
            }
+           openserial_printError(COMPONENT_ICN, ERR_DEBUG4,
+                        i+offset, 1);
            icn_addToFixedSchedule(schedule[i].sender, i+offset, -1, -1);
+           return;
        }
    }
 }
 
 void icn_removeRXReservation(icn_link_t *schedule, open_addr_t *neighbor, size_t len, size_t offset) {
+    uint16_t tmp = 0;
+    openserial_printError(COMPONENT_ICN, ERR_DEBUG2, csSlotsActive, 0);
     /* iterate over the full schedule and remove my reservations*/
    for (int i = 0; i < len; i++) {
        /* if I am the receiver */
        if (packetfunctions_sameAddress(myId, schedule[i].receiver) &&
                packetfunctions_sameAddress(neighbor, schedule[i].sender)) {
+           if (tmp++ < (csSlotsActive - 1)) {
+               continue;
+           }
+           openserial_printError(COMPONENT_ICN, ERR_DEBUG4,
+                        i+offset, 0);
            schedule_removeActiveSlot(i+offset, schedule[i].sender);
+           return;
        }
    }
 }
@@ -590,14 +620,9 @@ void icn_initInterest(opentimer_id_t id) {
 
 #if ADAPTIVE_SCHEDULE
         /* make reservation for CS */
-        if (!csSlotsActive) {
-            csSlotsActive = 1;
-            open_addr_t *nextHop = _routeLookup(CONTENT_STORE);
-            icn_makeRXReservation(ssf_cs, nextHop, SSF_CS_SIZE, SSF_CS_OFFSET);
-            openserial_printInfo(COMPONENT_ICN, ERR_DEBUG2,
-                    nextHop.addr_64b[6],
-                    nextHop.addr_64b[7]};
-        }
+        open_addr_t *nextHop = _routeLookup(CONTENT_STORE);
+        icn_makeRXReservation(ssf_cs, nextHop, SSF_CS_SIZE, SSF_CS_OFFSET);
+        csSlotsActive++;
 #endif
 
         // send interest packet
@@ -667,18 +692,18 @@ void iphc_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
     msg->owner = COMPONENT_ICN;
     fail_counter += msg->l2_numTxAttempts - 1;
 #if ADAPTIVE_SCHEDULE
-    if (HAS_CONTENT) {
-        if (csSlotsActive) {
-            icn_removeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
-            csSlotsActive = 0;
+    if (error == E_SUCCESS) {
+        if (HAS_CONTENT) {
+            if (csSlotsActive) {
+                icn_removeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
+                csSlotsActive--;
+            }
         }
-    }
-    else {
-        if ((pit_ctr <= 1) && (csSlotsActive)) {
+        else if (!WANT_CONTENT && ((pit_ctr <= 1) && (csSlotsActive))) {
             icn_removeRXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
             icn_removeTXReservation(ssf_cs, &pit_entry, SSF_CS_SIZE, SSF_CS_OFFSET);
-            csSlotsActive = 0;
-        }
+            csSlotsActive--;
+            }
     }
 #endif
     openqueue_freePacketBuffer(msg);
@@ -691,12 +716,10 @@ void iphc_receive(OpenQueueEntry_t* msg) {
         case ICN_INTEREST:
             if (HAS_CONTENT) {
 #if ADAPTIVE_SCHEDULE
-                if (!csSlotsActive) {
-                    csSlotsActive = 1;
-                    /* for next hop, to receive potential content */
-                    icn_makeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
+                /* for next hop, to receive potential content */
+                icn_makeTXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
+                csSlotsActive++;
 //                    openserial_printInfo(COMPONENT_ICN, ERR_DEBUG1, msg->l2_nextORpreviousHop.addr_64b[6], msg->l2_nextORpreviousHop.addr_64b[7]);
-                }
 #endif
 //                openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV1,
 //                        (errorparameter_t) msg->l2_nextORpreviousHop.addr_64b[6],
@@ -725,21 +748,13 @@ void iphc_receive(OpenQueueEntry_t* msg) {
 
 #if ADAPTIVE_SCHEDULE
                 /* make reservations in CS */
-                if (!csSlotsActive) {
-                    csSlotsActive = 1;
-                    /* for next hop, to receive potential content */
-                    open_addr_t *nextHop = _routeLookup(CONTENT_STORE);
-                    icn_makeRXReservation(ssf_cs, nextHop, SSF_CS_SIZE, SSF_CS_OFFSET);
-                    openserial_printInfo(COMPONENT_ICN, ERR_DEBUG2,
-                            nextHop.addr_64b[6],
-                            nextHop.addr_64b[7]};
+                /* for next hop, to receive potential content */
+                open_addr_t *nextHop = _routeLookup(CONTENT_STORE);
+                icn_makeRXReservation(ssf_cs, nextHop, SSF_CS_SIZE, SSF_CS_OFFSET);
 
-                    /* for previous hop to send back the potential content */
-                    icn_makeTXReservation(ssf_cs, &pit_entry, SSF_CS_SIZE, SSF_CS_OFFSET);
-                    openserial_printInfo(COMPONENT_ICN, ERR_DEBUG1,
-                            pit.addr_64b[6],
-                            pit.addr_64b[7]};
-                }
+                /* for previous hop to send back the potential content */
+                icn_makeTXReservation(ssf_cs, &pit_entry, SSF_CS_SIZE, SSF_CS_OFFSET);
+                csSlotsActive++;
 #endif
 
                 /* forward to CS node */
@@ -775,7 +790,7 @@ void iphc_receive(OpenQueueEntry_t* msg) {
 #if ADAPTIVE_SCHEDULE
                 if (csSlotsActive) {
                     icn_removeRXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
-                    csSlotsActive = 0;
+                    csSlotsActive--;
                 }
 #endif
                 openqueue_freePacketBuffer(msg);
