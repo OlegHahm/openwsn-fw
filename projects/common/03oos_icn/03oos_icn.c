@@ -18,6 +18,7 @@
 #include "sixtop.h"
 #include "idmanager.h"
 #include "neighbors.h"
+#include "bitfield.h"
 
 char *interest = "/ndn/RIOT/sensor";
 
@@ -330,10 +331,14 @@ icn_routing_entry_t routing_table[RRT_SIZE] = {
 
 #endif
 
+BITFIELD(128, received_chunks);
+
 int mote_main(void) {
    board_init();
    scheduler_init();
    openstack_init();
+
+   memset(received_chunks, 0, sizeof(received_chunks));
 
    myId = idmanager_getMyID(ADDR_64B);
 
@@ -757,7 +762,18 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                 openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_CONT,
                         (errorparameter_t) icn_pkt->seq,
                         (errorparameter_t) send_counter);
-                receive_counter = (receive_counter < icn_pkt->seq) ? icn_pkt->seq : receive_counter;
+                if (bf_isset(received_chunks, icn_pkt->seq)) {
+                    openserial_printInfo(COMPONENT_ICN, ERR_LOOP_DETECTED,
+                            icn_pkt->seq, 0);
+                }
+                else {
+                //    openserial_printInfo(COMPONENT_ICN, ERR_ICN_RECV_CONT,
+                //            (errorparameter_t) icn_pkt->seq,
+                //            (errorparameter_t) send_counter);
+                    bf_set(received_chunks, icn_pkt->seq);
+                }
+
+                receive_counter++;
 #if ADAPTIVE_SCHEDULE
                 if (csSlotsActive) {
                     icn_removeRXReservation(ssf_cs, &(msg->l2_nextORpreviousHop), SSF_CS_SIZE, SSF_CS_OFFSET);
