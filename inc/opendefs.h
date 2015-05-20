@@ -242,10 +242,12 @@ enum {
    ERR_ICN_RECV_INT                    = 0x41, // ICN interest received in slot {0} with sequence number {1}
    ERR_ICN_RECV_CONT                   = 0x42, // ICN content received in slot {0} with sequence number {1}
    ERR_ICN_FLOW_CTRL                   = 0x43, // ICN flow control triggered, sending seq is {0}, while last received seq is {1}
-   ERR_DEBUG1                          = 0x44, // DEBUG1: {0} {1}
-   ERR_DEBUG2                          = 0x45, // DEBUG2: {0} {1}
-   ERR_DEBUG3                          = 0x46, // DEBUG3: {0} {1}
-   ERR_DEBUG4                          = 0x47, // DEBUG4: {0} {1}
+   ERR_ICN_DUPLICATE                   = 0x44, // ICN duplicate content packet for seq {0} detected
+   ERR_ICN_TX_FAIL_COUNT               = 0x45, // ICN l2 retry count: {0}
+   ERR_DEBUG1                          = 0x46, // DEBUG1: {0} {1}
+   ERR_DEBUG2                          = 0x47, // DEBUG2: {0} {1}
+   ERR_DEBUG3                          = 0x48, // DEBUG3: {0} {1}
+   ERR_DEBUG4                          = 0x49, // DEBUG4: {0} {1}
 };
 
 //=========================== typedef =========================================
