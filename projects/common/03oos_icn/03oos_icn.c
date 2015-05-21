@@ -86,6 +86,7 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 #define ADAPTIVE_SCHEDULE   (0)
 #define TIMED_SENDING       (1)
 #define INTEREST_INTERVAL   (1500)
+#define BACKGROUND_INTERVAL (50)
 #define FLOW_CONTROL        (1)
 #define FLOW_THR            (40)
 #define USE_CSMA            (0)
@@ -101,8 +102,8 @@ open_addr_t* _routeLookup(open_addr_t *dst);
 #define HAS_CONTENT     (memcmp(myId, CONTENT_STORE, ADDR_LEN_64B) == 0)
 #define WANT_CONTENT    (memcmp(myId, &(node_ids[9]), ADDR_LEN_64B) == 0)
 #define BACKGROUND_NODE ((memcmp(myId, &(node_ids[3]), ADDR_LEN_64B) == 0) || \
-        (memcmp(myId, &(node_ids[3]), ADDR_LEN_64B) == 0) || (memcmp(myId, \
-                &(node_ids[3]), ADDR_LEN_64B) == 0))
+        (memcmp(myId, &(node_ids[5]), ADDR_LEN_64B) == 0) || (memcmp(myId, \
+                &(node_ids[6]), ADDR_LEN_64B) == 0))
 
 #define NUMBER_OF_NODES     (10)
 
@@ -788,11 +789,20 @@ void icn_send(open_addr_t *dst, OpenQueueEntry_t *pkt) {
 //===== IPHC
 
 void iphc_init(void) {
+    if (BACKGROUND_NODE) {
     icn_vars.timerId    = opentimers_start(
-            INTEREST_INTERVAL,
+            BACKGROUND_NODE,
             TIMER_PERIODIC,TIME_MS,
             icn_initInterest
             );
+    }
+    else {
+        icn_vars.timerId    = opentimers_start(
+                INTEREST_INTERVAL,
+                TIMER_PERIODIC,TIME_MS,
+                icn_initInterest
+                );
+    }
 }
 
 void iphc_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
@@ -913,6 +923,9 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                         (errorparameter_t) 11);
                 openqueue_freePacketBuffer(msg);
             }
+            break;
+        case ICN_BACKGROUND:
+            openqueue_freePacketBuffer(msg);
             break;
         default:
             openserial_printError(COMPONENT_ICN, ERR_MSG_UNKNOWN_TYPE,
