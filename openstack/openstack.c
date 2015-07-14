@@ -48,7 +48,7 @@
 
 //=========================== private =========================================
 
-void openstack_init(void) {
+void openstack_init(uint8_t role) {
    DEBUG("%s\n",__PRETTY_FUNCTION__);
    
    //===== drivers
@@ -56,7 +56,7 @@ void openstack_init(void) {
    
    //===== stack
    //-- cross-layer
-   idmanager_init();    // call first since initializes EUI64 and isDAGroot
+   idmanager_init(role);    // call first since initializes EUI64 and isDAGroot
    openqueue_init();
    openrandom_init();
    opentimers_init();
