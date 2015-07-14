@@ -13,7 +13,7 @@
 */
 
 #include "stdint.h"
-#include "board.h"
+#include "board_ow.h"
 
 //=========================== define ==========================================
 
@@ -44,7 +44,7 @@ void     radiotimer_cancel(void);
 PORT_RADIOTIMER_WIDTH radiotimer_getCapturedTime(void);
 
 // interrupt handlers
-kick_scheduler_t   radiotimer_isr(void);
+void   radiotimer_isr(void);
 
 /**
 \}
