@@ -37,6 +37,9 @@
 //===== applications
 #include "openapps.h"
 
+#define ENABLE_DEBUG (0)
+#include "debug.h"
+
 //=========================== variables =======================================
 
 //=========================== prototypes ======================================
@@ -46,6 +49,7 @@
 //=========================== private =========================================
 
 void openstack_init(void) {
+   DEBUG("%s\n",__PRETTY_FUNCTION__);
    
    //===== drivers
    openserial_init();
