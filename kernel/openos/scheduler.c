@@ -6,9 +6,14 @@
 
 #include "opendefs.h"
 #include "scheduler.h"
-#include "board.h"
+#include "board_ow.h"
 #include "debugpins.h"
 #include "leds.h"
+
+#include "thread.h"
+
+#define ENABLE_DEBUG (0)
+#include "debug.h"
 
 //=========================== variables =======================================
 
@@ -53,7 +58,7 @@ void scheduler_start(void) {
          scheduler_dbg.numTasksCur--;
       }
       debugpins_task_clr();
-      board_sleep();
+      thread_yield();
       debugpins_task_set();                      // IAR should halt here if nothing to do
    }
 }
@@ -63,6 +68,7 @@ void scheduler_start(void) {
    taskList_item_t** taskListWalker;
    INTERRUPT_DECLARATION();
    
+   DEBUG("owsn scheduler: push back task %p.\n", cb);
    DISABLE_INTERRUPTS();
    
    // find an empty task container
