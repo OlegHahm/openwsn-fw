@@ -7,4 +7,10 @@
 #ifndef __openwsn_H
 #define __openwsn_H
 
+int openwsn_start_thread(int argc, char **argv);
+
+//=========================== define ==========================================
+
+#define PRIORITY_OPENWSN            THREAD_PRIORITY_MAIN-1
+
 #endif
