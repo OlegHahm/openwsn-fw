@@ -458,8 +458,8 @@ void openserial_goldenImageCommands(void){
 #endif
    uint8_t  commandId;
    uint8_t  commandLen;
-   uint8_t  comandParam_8;
-   uint16_t comandParam_16;
+   uint8_t  comandParam_8 = 0;
+   uint16_t comandParam_16 = 0;
    
    numDataBytes = openserial_getNumDataBytes();
    //copying the buffer
