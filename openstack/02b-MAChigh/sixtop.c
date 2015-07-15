@@ -170,7 +170,7 @@ void sixtop_addCells(open_addr_t* neighbor, uint16_t numCells){
    uint8_t           flag;
    bool              outcome;
    cellInfo_ht       cellList[SCHEDULEIEMAXNUMCELLS];
-   uint8_t           scheduleID_subId;
+   uint8_t           scheduleID_subId = 0;
    
    frameID    = schedule_getFrameHandle();
    
@@ -267,7 +267,7 @@ void sixtop_removeCell(open_addr_t* neighbor){
    uint8_t           frameID;
    uint8_t           flag;
    cellInfo_ht       cellList[SCHEDULEIEMAXNUMCELLS];
-   uint8_t           scheduleIE_subId;
+   uint8_t           scheduleIE_subId = 0;
    
    memset(cellList,0,sizeof(cellList));
    
@@ -358,7 +358,7 @@ void sixtop_removeCellByInfo(open_addr_t*  neighbor,cellInfo_ht* cellInfo){
    uint8_t           frameID;
    uint8_t           flag;
    cellInfo_ht       cellList[SCHEDULEIEMAXNUMCELLS];
-   uint8_t           scheduleIE_subId;
+   uint8_t           scheduleIE_subId = 0;
    
    memset(cellList,0,sizeof(cellList));
    
@@ -1223,7 +1223,7 @@ void sixtop_linkResponse(
    uint8_t bw;
    uint8_t type,frameID,flag;
    cellInfo_ht* cellList;
-   uint8_t scheduleID_subId; 
+   uint8_t scheduleID_subId = 0;
     
    // get parameters for scheduleIE
    type = schedule_ie->type;
