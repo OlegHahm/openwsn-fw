@@ -1,3 +1,4 @@
+#include "board.h"
 #include "uart.h"
 #include "leds.h"
 #include "periph/uart.h"
@@ -16,6 +17,8 @@ typedef struct {
 volatile uart_vars_t uart_vars;
 
 //=========================== prototypes ======================================
+void uart_rx_cb_wrapper(void *arg, char data);
+int uart_tx_cb_wrapper(void *arg);
 
 //=========================== public ==========================================
 
@@ -32,65 +35,72 @@ void uart_init_ow(void)
 
 void uart_setCallbacks(uart_tx_cbt txCb, uart_rx_cbt rxCb)
 {
-  uart_vars.txCb = txCb;
-  uart_vars.rxCb = rxCb;
+    uart_vars.txCb = txCb;
+    uart_vars.rxCb = rxCb;
+
+    extern void uart_set_callbacks(uart_t uart, uart_tx_cb_t tx_cb, uart_rx_cb_t rx_cb, void *arg);
+    uart_set_callbacks(STDIO, uart_tx_cb_wrapper, uart_rx_cb_wrapper, NULL);
 }
+
+extern void uart_rx_begin(uart_t uart);
+extern void uart_rx_end(uart_t uart);
+extern void uart_tx_end(uart_t uart);
 
 void uart_enableInterrupts(void)
 {
-  // USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+    uart_tx_begin(STDIO);
+    uart_rx_begin(STDIO);
 }
 
 void uart_disableInterrupts(void)
 {
-  // USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
-  // USART_ITConfig(USART1, USART_IT_RXNE, DISABLE);
+    uart_tx_end(STDIO);
+    uart_rx_end(STDIO);
 }
 
 void uart_clearRxInterrupts(void)
 {
-  // USART_ClearFlag(USART1, USART_FLAG_RXNE);
+    extern void uart_clear_rx_interrupts(uart_t uart);
+    uart_clear_rx_interrupts(STDIO);
 }
 
 void uart_clearTxInterrupts(void)
 {
-  // USART_ClearFlag(USART1, USART_FLAG_TXE);
+    extern void uart_clear_tx_interrupts(uart_t uart);
+    uart_clear_tx_interrupts(STDIO);
 }
 
 void uart_writeByte(uint8_t byteToWrite)
 {
-  // USART_SendData(USART1, byteToWrite);
-  // while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
+    uart_write_blocking(STDIO, (char) byteToWrite);
 
-  // //start or end byte?
-  // if(byteToWrite == uart_vars.flagByte) {
-  //   uart_vars.startOrend = (uart_vars.startOrend == 0)?1:0;
-  //   //start byte
-  //   if(uart_vars.startOrend == 1) {
-  //     USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
-  //   } else {
-  //     USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
-  //   }
-  // }
+   //start or end byte?
+   if(byteToWrite == uart_vars.flagByte) {
+     uart_vars.startOrend = (uart_vars.startOrend == 0)?1:0;
+     //start byte
+     if(uart_vars.startOrend == 1) {
+        uart_tx_begin(STDIO);
+     } else {
+        uart_tx_end(STDIO);
+     }
+   }
 }
 
 uint8_t uart_readByte(void)
 {
-  uint16_t temp = 0;
-  // temp = USART_ReceiveData(USART1);
+  extern int uart_read(uart_t uart, char *data);
+  char temp = 0;
+  uart_read(STDIO, &temp);
   return (uint8_t)temp;
 }
 
-//=========================== interrupt handlers ==============================
-
-kick_scheduler_t uart_tx_isr(void)
-{
-  uart_vars.txCb();
-  return DO_NOT_KICK_SCHEDULER;
-}
-
-kick_scheduler_t uart_rx_isr(void)
+void uart_rx_cb_wrapper(void *arg, char data)
 {
   uart_vars.rxCb();
-  return DO_NOT_KICK_SCHEDULER;
+}
+
+int uart_tx_cb_wrapper(void *arg)
+{
+  uart_vars.txCb();
+  return 0;
 }
