@@ -3,6 +3,9 @@
 
 \author Thomas Watteyne <watteyne@eecs.berkeley.edu>, August 2010
 */
+
+#include <unistd.h>
+
 #include "thread.h"
 #include "board_ow.h"
 #include "crypto_engine.h"
@@ -59,6 +62,7 @@ void* openwsn_start(void *arg) {
     scheduler_init();
     openstack_init(*((uint8_t*)arg));
     puts("OpenWSN thread started.");
+    close(STDOUT_FILENO);
     scheduler_start();
     return NULL;
 }
